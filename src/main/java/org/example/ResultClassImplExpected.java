@@ -14,4 +14,9 @@ public class ResultClassImplExpected extends ResultClass {
     public void other() {
         parent2.other();
     }
+
+    @Override
+    public void nan() {
+
+    }
 }

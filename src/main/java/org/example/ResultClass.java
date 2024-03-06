@@ -11,4 +11,7 @@ public abstract class ResultClass implements CommonParent {
 
     @Inherit(from = Parent2.class)
     public abstract void other();
+
+    @Inherit(from = Parent1.class)
+    public abstract void nan();
 }

@@ -6,7 +6,7 @@
 
     <groupId>ru.miqqra</groupId>
     <artifactId>MultipleInheritance</artifactId>
-    <version>1.0.3-SNAPSHOT</version>
+    <version>1.0.19-SNAPSHOT</version>
     <packaging>jar</packaging>
 
     <properties>
@@ -18,23 +18,19 @@
         <mapstruct.version>1.5.5.Final</mapstruct.version>
     </properties>
 
-
     <dependencies>
+
+        <dependency>
+            <groupId>com.squareup</groupId>
+            <artifactId>javapoet</artifactId>
+            <version>1.13.0</version>
+        </dependency>
+
         <dependency>
             <groupId>com.google.auto.service</groupId>
             <artifactId>auto-service</artifactId>
             <version>${auto-service.version}</version>
             <scope>provided</scope>
-        </dependency>
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct</artifactId>
-            <version>${mapstruct.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.mapstruct</groupId>
-            <artifactId>mapstruct-processor</artifactId>
-            <version>${mapstruct.version}</version>
         </dependency>
     </dependencies>
 
@@ -51,14 +47,22 @@
                     <compilerArgument>
                         -proc:none
                     </compilerArgument>
-                    <generatedSourcesDirectory>
-                        ${project.build.directory}\generated-sources\
-                    </generatedSourcesDirectory>
-                    <annotationProcessors>
-                        <annotationProcessor>
-                            ru.miqqra.processor.AnnotationProcessor
-                        </annotationProcessor>
-                    </annotationProcessors>
+                    <!--                    <generatedSourcesDirectory>-->
+                    <!--                        ${project.build.directory}/generated-sources/-->
+                    <!--                    </generatedSourcesDirectory>-->
+                    <!--                    <annotationProcessors>-->
+                    <!--                        <annotationProcessor>-->
+                    <!--                            ru.miqqra.processor.AnnotationProcessor-->
+                    <!--                        </annotationProcessor>-->
+                    <!--                    </annotationProcessors>-->
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.0.2</version>
+                <configuration>
+                    <encoding>UTF-8</encoding>
                 </configuration>
             </plugin>
         </plugins>

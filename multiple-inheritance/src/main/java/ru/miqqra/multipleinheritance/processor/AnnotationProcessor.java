@@ -1,5 +1,6 @@
-package ru.miqqra.processor;
+package ru.miqqra.multipleinheritance.processor;
 
+import com.google.auto.service.AutoService;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.RoundEnvironment;
 import javax.annotation.processing.SupportedAnnotationTypes;
@@ -10,7 +11,7 @@ import javax.lang.model.element.TypeElement;
 import javax.tools.Diagnostic;
 import java.util.Set;
 
-@SupportedAnnotationTypes("ru.miqqra.annotations.Inheritance")
+@SupportedAnnotationTypes("ru.miqqra.multipleinheritance.annotations.Inheritance")
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
 public class AnnotationProcessor extends AbstractProcessor {
 

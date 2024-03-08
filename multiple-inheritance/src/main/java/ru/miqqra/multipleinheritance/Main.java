@@ -1,4 +1,4 @@
-package ru.miqqra;
+package ru.miqqra.multipleinheritance;
 
 public class Main {
     public static void main(String[] args) {

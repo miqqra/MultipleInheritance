@@ -1,4 +1,4 @@
-package ru.miqqra.annotations;
+package ru.miqqra.multipleinheritance.annotations;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

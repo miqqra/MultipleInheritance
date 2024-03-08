@@ -1,4 +1,4 @@
-package org.example;
+package org.example.usage;
 
 public class Parent2 implements CommonParent {
 

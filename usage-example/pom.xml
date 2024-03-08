@@ -4,16 +4,19 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.example</groupId>
-    <artifactId>MultipleInheritanceExample</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <parent>
+        <groupId>ru.miqqra</groupId>
+        <artifactId>mi-parent</artifactId>
+        <version>1.0.20-SNAPSHOT</version>
+    </parent>
+
+    <artifactId>usage-example</artifactId>
 
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
-        <auto-service.version>1.0-rc2</auto-service.version>
+        <auto-service.version>1.1.1</auto-service.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <mult.inheritance.version>1.0.19-SNAPSHOT</mult.inheritance.version>
     </properties>
 
     <dependencies>
@@ -24,23 +27,11 @@
             <scope>provided</scope>
         </dependency>
 
-                <dependency>
-                    <groupId>ru.miqqra</groupId>
-                    <artifactId>MultipleInheritance</artifactId>
-                    <version>${mult.inheritance.version}</version>
-                    <scope>system</scope>
-                    <systemPath>
-                        C:/Users/User/IdeaProjects/MultipleInheritance/target/MultipleInheritance-${mult.inheritance.version}.jar
-                    </systemPath>
-                </dependency>
-
-<!--        <dependency>-->
-<!--            <groupId>ru.miqqra</groupId>-->
-<!--            <artifactId>MultipleInheritance</artifactId>-->
-<!--            <version>${mult.inheritance.version}</version>-->
-<!--            <optional>true</optional>-->
-<!--        </dependency>-->
-
+        <dependency>
+            <groupId>ru.miqqra</groupId>
+            <artifactId>multiple-inheritance</artifactId>
+            <version>1.0.20-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>

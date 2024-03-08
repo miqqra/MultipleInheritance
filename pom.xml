@@ -10,6 +10,7 @@
     <packaging>pom</packaging>
     <modules>
         <module>multiple-inheritance</module>
+        <module>usage-example</module>
     </modules>
 
     <properties>

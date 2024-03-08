@@ -1,7 +1,7 @@
-package org.example;
+package org.example.usage;
 
-import ru.miqqra.annotations.Inherit;
-import ru.miqqra.annotations.Inheritance;
+import ru.miqqra.multipleinheritance.annotations.Inherit;
+import ru.miqqra.multipleinheritance.annotations.Inheritance;
 
 @Inheritance(classes = {Parent1.class, Parent2.class})
 public abstract class ResultClass implements CommonParent {

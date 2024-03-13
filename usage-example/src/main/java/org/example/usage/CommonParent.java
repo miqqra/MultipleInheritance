@@ -1,4 +1,5 @@
 package org.example.usage;
 
-public interface CommonParent {
+public class CommonParent {
+    public int commonField = 0;
 }

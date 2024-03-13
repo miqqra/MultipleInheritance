@@ -1,6 +1,8 @@
 package org.example.usage;
 
-public class Parent1 implements CommonParent {
+public class Parent1 extends CommonParent {
+
+    public int parent1Field = 1;
 
     public void whatever() {
         System.out.println("Hello from Parent1");

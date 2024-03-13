@@ -1,6 +1,6 @@
 package org.example.usage;
 
-public class Parent2 implements CommonParent {
+public class Parent2 extends CommonParent {
 
     public void whatever() {
         System.out.println("Hello from Parent2");

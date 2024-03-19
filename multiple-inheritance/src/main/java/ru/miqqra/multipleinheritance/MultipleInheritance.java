@@ -1,13 +1,13 @@
-package ru.miqqra.multipleinheritance.annotations;
+package ru.miqqra.multipleinheritance;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-@Target(ElementType.METHOD)
+@Target(ElementType.TYPE)
 @Retention(RetentionPolicy.SOURCE)
-public @interface Inherit {
+public @interface MultipleInheritance {
 
-    Class<?> from();
+    Class[] classes() default {};
 }

@@ -1,18 +1,13 @@
 package org.example.usage;
 
-import ru.miqqra.multipleinheritance.annotations.Inherit;
-import ru.miqqra.multipleinheritance.annotations.Inheritance;
+import ru.miqqra.multipleinheritance.MultipleInheritance;
 
-@Inheritance(classes = {Parent1.class, Parent2.class})
+@MultipleInheritance(classes = {Parent1.class, Parent2.class})
 //public abstract class ResultClass implements CommonParent {
-public abstract class ResultClass extends CommonParent {
+public class ResultClass {
 
-    @Inherit(from = Parent1.class)
-    public abstract void whatever();
-
-    @Inherit(from = Parent2.class)
-    public abstract void other();
-
-    @Inherit(from = Parent1.class)
-    public abstract void nan();
+    public void whatever() {
+        System.out.println("Hello from ResultClass");
+        //Super
+    }
 }

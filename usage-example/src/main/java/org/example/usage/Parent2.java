@@ -1,6 +1,9 @@
 package org.example.usage;
 
-public class Parent2 extends CommonParent {
+import ru.miqqra.multipleinheritance.MultipleInheritance;
+
+@MultipleInheritance(classes = {Parent1.class})
+public class Parent2  {
 
     public void whatever() {
         System.out.println("Hello from Parent2");
@@ -10,7 +13,7 @@ public class Parent2 extends CommonParent {
         System.out.println("Bye from Parent2");
     }
 
-    int onlyParent2() {
-        return 2;
-    }
+//    int onlyParent2() {
+//        return 2;
+//    }
 }

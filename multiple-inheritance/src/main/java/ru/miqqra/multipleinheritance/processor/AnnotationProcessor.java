@@ -1,18 +1,39 @@
 package ru.miqqra.multipleinheritance.processor;
 
 import com.google.auto.service.AutoService;
-import com.squareup.javapoet.*;
+import com.squareup.javapoet.ClassName;
+import com.squareup.javapoet.CodeBlock;
+import com.squareup.javapoet.FieldSpec;
+import com.squareup.javapoet.JavaFile;
+import com.squareup.javapoet.MethodSpec;
+import com.squareup.javapoet.ParameterSpec;
+import com.squareup.javapoet.TypeName;
+import com.squareup.javapoet.TypeSpec;
 import ru.miqqra.multipleinheritance.MultipleInheritance;
 import ru.miqqra.multipleinheritance.MultipleInheritanceObject;
 
-import javax.annotation.processing.*;
+import javax.annotation.processing.AbstractProcessor;
+import javax.annotation.processing.Processor;
+import javax.annotation.processing.RoundEnvironment;
+import javax.annotation.processing.SupportedAnnotationTypes;
+import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
-import javax.lang.model.element.*;
+import javax.lang.model.element.Element;
+import javax.lang.model.element.ExecutableElement;
+import javax.lang.model.element.Modifier;
+import javax.lang.model.element.TypeElement;
+import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import java.io.IOException;
-import java.util.*;
+import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @SupportedAnnotationTypes("ru.miqqra.multipleinheritance.MultipleInheritance")
@@ -153,32 +174,101 @@ public class AnnotationProcessor extends AbstractProcessor {
     }
 
     private MethodSpec createMethod(Map.Entry<String, ExecutableElement> nameAndMethodEntry, List<TypeElement> resolutionTable, Map<TypeElement, String> fieldNames) {
-        MethodSpec.Builder methodSpec = MethodSpec.methodBuilder(nameAndMethodEntry.getKey()).addModifiers(nameAndMethodEntry.getValue().getModifiers());
+        MethodSpec.Builder methodSpec = MethodSpec.methodBuilder(nameAndMethodEntry.getKey())
+                .addException(NoSuchMethodException.class)
+                .addException(InvocationTargetException.class)
+                .addException(IllegalAccessException.class)
+                .addModifiers(nameAndMethodEntry.getValue().getModifiers());
         nameAndMethodEntry.getValue().getParameters().forEach(v -> methodSpec.addParameter(ParameterSpec.get(v)));
         TypeName returnType = TypeName.get(nameAndMethodEntry.getValue().getReturnType());
         methodSpec.returns(returnType);
 
-        String methodCallFormat;
-        if ("void".equals(returnType.toString())) {
-            methodCallFormat = "$N.$N($L)";
-        } else {
-            methodCallFormat = "$N.$N($L)"; //todo
-        }
+        String callNextMethodName = CALL_NEXT_METHOD_PATTERN.formatted(nameAndMethodEntry.getKey());
+        methodSpec.addCode(
+                CodeBlock.builder()
+                        .beginControlFlow("if (actualObject != null)")
+                        .addStatement("var actual = actualObject")
+                        .addStatement("actualObject = null")
+                        .addStatement("actual.getClass().getDeclaredMethod(\"%s\").invoke(actual)"
+                                .formatted(callNextMethodName))
+                        .nextControlFlow("else")
+                        .addStatement("currentNextMethod = 0")
+                        .addStatement(callNextMethodName + "()")
+                        .endControlFlow()
+                        .build()
+        );
 
-        resolutionTable.forEach(element -> methodSpec.addStatement(methodCallFormat, fieldNames.get(element), nameAndMethodEntry.getKey(), CodeBlock.join(nameAndMethodEntry.getValue().getParameters().stream().map(x -> CodeBlock.of(x.getSimpleName().toString())).toList(), ", ")));
-
-        String callNextMethodFormat = "$N.$N($L)";
-        resolutionTable.forEach(element -> methodSpec.addStatement(callNextMethodFormat, fieldNames.get(element), CALL_NEXT_METHOD_PATTERN.formatted(nameAndMethodEntry.getKey()), CodeBlock.join(nameAndMethodEntry.getValue().getParameters().stream().map(x -> CodeBlock.of(x.getSimpleName().toString())).toList(), ", ")));
+//        String methodCallFormat;
+//        if ("void".equals(returnType.toString())) {
+//            methodCallFormat = "$N.$N($L)";
+//        } else {
+//            methodCallFormat = "$N.$N($L)"; //todo
+//        }
+//
+//        resolutionTable.forEach(element -> methodSpec.addStatement(methodCallFormat, fieldNames.get(element), nameAndMethodEntry.getKey(), CodeBlock.join(nameAndMethodEntry.getValue().getParameters().stream().map(x -> CodeBlock.of(x.getSimpleName().toString())).toList(), ", ")));
+//
+//        String callNextMethodFormat = "$N.$N($L)";
+//        resolutionTable.forEach(element -> methodSpec.addStatement(callNextMethodFormat, fieldNames.get(element), CALL_NEXT_METHOD_PATTERN.formatted(nameAndMethodEntry.getKey()), CodeBlock.join(nameAndMethodEntry.getValue().getParameters().stream().map(x -> CodeBlock.of(x.getSimpleName().toString())).toList(), ", ")));
 
 
         return methodSpec.build();
     }
 
-    private MethodSpec createCallNextMethod(Map.Entry<String, ExecutableElement> entry, List<TypeElement> resolutionTable, Map<TypeElement, String> fieldNames) {
-        MethodSpec.Builder methodSpec = MethodSpec.methodBuilder(CALL_NEXT_METHOD_PATTERN.formatted(entry.getKey())).addModifiers(entry.getValue().getModifiers());
-        entry.getValue().getParameters().forEach(v -> methodSpec.addParameter(ParameterSpec.get(v)));
+    private MethodSpec createCallNextMethod(Map.Entry<String, ExecutableElement> nameAndMethodEntry,
+                                            List<TypeElement> resolutionTable,
+                                            Map<TypeElement, String> fieldNames) {
+        String callNextMethodName = CALL_NEXT_METHOD_PATTERN.formatted(nameAndMethodEntry.getKey());
 
-        return methodSpec.build();
+        MethodSpec.Builder methodSpec = MethodSpec.methodBuilder(callNextMethodName)
+                .addModifiers(nameAndMethodEntry.getValue().getModifiers());
+        nameAndMethodEntry.getValue().getParameters().forEach(v -> methodSpec.addParameter(ParameterSpec.get(v)));
+
+        TypeName returnType = TypeName.get(nameAndMethodEntry.getValue().getReturnType());
+        methodSpec.returns(returnType);
+
+        CodeBlock.Builder codeBlockBuilder = CodeBlock.builder()
+                .addStatement("currentNextMethod++");
+
+        for (int i = 0; i < resolutionTable.size(); i++) {
+            if (i == 0 && i == resolutionTable.size() - 1) {
+                addStatements(
+                        codeBlockBuilder.beginControlFlow("if (currentNextMethod == %d)".formatted(i + 1)),
+                        nameAndMethodEntry, resolutionTable, fieldNames, i).endControlFlow();
+            } else if (i == 0) {
+                addStatements(
+                        codeBlockBuilder.beginControlFlow("if (currentNextMethod == %d)".formatted(i + 1)),
+                        nameAndMethodEntry, resolutionTable, fieldNames, i);
+            } else if (i == resolutionTable.size() - 1) {
+                addStatements(
+                        codeBlockBuilder.nextControlFlow("if (currentNextMethod == %d)".formatted(i + 1)),
+                        nameAndMethodEntry, resolutionTable, fieldNames, i).endControlFlow();
+            } else {
+                addStatements(
+                        codeBlockBuilder.nextControlFlow("if (currentNextMethod == %d)".formatted(i + 1)),
+                        nameAndMethodEntry, resolutionTable, fieldNames, i);
+            }
+
+        }
+        return methodSpec.addCode(codeBlockBuilder.build()).build();
+    }
+
+    private CodeBlock.Builder addStatements(CodeBlock.Builder builder,
+                                            Map.Entry<String, ExecutableElement> nameAndMethodEntry,
+                                            List<TypeElement> resolutionTable,
+                                            Map<TypeElement, String> fieldNames,
+                                            int i) {
+        String methodCallFormat = "$N.$N($L)";
+
+        return builder.addStatement(methodCallFormat,
+                fieldNames.get(resolutionTable.get(i)),
+                nameAndMethodEntry.getKey(),
+                CodeBlock.join(nameAndMethodEntry.getValue()
+                                .getParameters()
+                                .stream()
+                                .map(x -> CodeBlock.of(x.getSimpleName().toString()))
+                                .toList(),
+                        ", ")
+        );
     }
 
     private String getParamName(TypeElement typeElement) {

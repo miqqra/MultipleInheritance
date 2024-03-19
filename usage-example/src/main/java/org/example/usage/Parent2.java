@@ -9,4 +9,8 @@ public class Parent2 extends CommonParent {
     public void other() {
         System.out.println("Bye from Parent2");
     }
+
+    int onlyParent2() {
+        return 2;
+    }
 }

@@ -15,7 +15,7 @@ public class ResultClassIntermediaryExpected extends MultipleInheritanceObject {
             var actual = actualObject;
             actualObject = null;
             try {
-                actual.getClass().getDeclaredMethod("callNextOther").invoke(actual);
+                actual.getClass().getMethod("callNextOther").invoke(actual);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }

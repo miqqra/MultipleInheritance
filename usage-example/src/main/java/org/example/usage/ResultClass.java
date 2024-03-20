@@ -2,7 +2,7 @@ package org.example.usage;
 
 import ru.miqqra.multipleinheritance.MultipleInheritance;
 
-@MultipleInheritance(classes = {Parent1.class, Parent2.class})
+@MultipleInheritance(classes = {Parent2.class, Parent1.class})
 public class ResultClass extends ResultClassIntermediary {
 
     public void whatever() {

@@ -185,7 +185,7 @@ public class AnnotationProcessor extends AbstractProcessor {
                 .addStatement("var actual = actualObject")
                 .addStatement("actualObject = null")
                 .beginControlFlow("try")
-                .addStatement("actual.getClass().getDeclaredMethod(\"%s\").invoke(actual)"
+                .addStatement("actual.getClass().getMethod(\"%s\").invoke(actual)"
                     .formatted(callNextMethodName))
                 .nextControlFlow("catch (Exception e)")
                 .addStatement("throw new RuntimeException(e)")
@@ -258,7 +258,10 @@ public class AnnotationProcessor extends AbstractProcessor {
                                             int i) {
         String methodCallFormat = "$N.$N($L)";
 
-        return builder.addStatement(methodCallFormat,
+        return builder
+
+            .addStatement("$N.actualObject = this", fieldNames.get(resolutionTable.get(i)))
+            .addStatement(methodCallFormat,
                 fieldNames.get(resolutionTable.get(i)),
                 nameAndMethodEntry.getKey(),
                 CodeBlock.join(nameAndMethodEntry.getValue()

@@ -91,6 +91,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         Map<TypeElement, String> fieldNames = resolutionTable.stream().collect(Collectors.toMap(v -> v, this::getParamName, (v1, v2) -> v2));
 
         Map<String, ExecutableElement> methods = processedParents.stream().map(Parent::classMembers).map(v -> v.methods).flatMap(Collection::stream).collect(Collectors.toMap(v -> v.getSimpleName().toString(), v -> v, (v1, v2) -> v2));
+        methods.putAll(ElementFilter.methodsIn(inheritedClass.getEnclosedElements()).stream().collect(Collectors.toMap(v -> v.getSimpleName().toString(), v -> v, (v1, v2) -> v2)));
 
         methods.entrySet().forEach(nameAndMethodEntry -> {
             var methodSpec = createMethod(nameAndMethodEntry, resolutionTable, fieldNames);

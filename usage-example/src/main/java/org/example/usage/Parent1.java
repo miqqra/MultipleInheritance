@@ -3,7 +3,7 @@ package org.example.usage;
 import ru.miqqra.multipleinheritance.MultipleInheritance;
 
 @MultipleInheritance
-public class Parent1 {
+public class Parent1 extends Parent1Intermediary {
 
     public void whatever() {
         System.out.println("Hello from Parent1");

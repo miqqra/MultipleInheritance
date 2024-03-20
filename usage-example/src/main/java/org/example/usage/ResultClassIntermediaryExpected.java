@@ -1,6 +1,5 @@
 package org.example.usage;
 
-import java.lang.reflect.InvocationTargetException;
 import ru.miqqra.multipleinheritance.MultipleInheritanceObject;
 
 /**
@@ -11,12 +10,15 @@ public class ResultClassIntermediaryExpected extends MultipleInheritanceObject {
 
     private final Parent1 parent1 = new Parent1();
 
-    public void other()
-        throws NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    public void other() {
         if (actualObject != null) {
             var actual = actualObject;
             actualObject = null;
-            actual.getClass().getDeclaredMethod("callNextOther").invoke(actual);
+            try {
+                actual.getClass().getDeclaredMethod("callNextOther").invoke(actual);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
         } else {
             currentNextMethod = 0;
             callNextother();

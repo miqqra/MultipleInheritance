@@ -7,7 +7,7 @@ public class Parent1 extends Parent1Intermediary {
 
     public void whatever() {
         System.out.println("Hello from Parent1");
-//        super
+        super.whatever();
     }
 
     public void other() {

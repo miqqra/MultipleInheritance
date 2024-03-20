@@ -9,9 +9,14 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import ru.miqqra.multipleinheritance.MultipleInheritance;
-import ru.miqqra.multipleinheritance.MultipleInheritanceObject;
-
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
@@ -26,15 +31,8 @@ import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import ru.miqqra.multipleinheritance.MultipleInheritance;
+import ru.miqqra.multipleinheritance.MultipleInheritanceObject;
 
 @SupportedAnnotationTypes("ru.miqqra.multipleinheritance.MultipleInheritance")
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
@@ -176,9 +174,6 @@ public class AnnotationProcessor extends AbstractProcessor {
 
     private MethodSpec createMethod(Map.Entry<String, ExecutableElement> nameAndMethodEntry, List<TypeElement> resolutionTable, Map<TypeElement, String> fieldNames) {
         MethodSpec.Builder methodSpec = MethodSpec.methodBuilder(nameAndMethodEntry.getKey())
-                .addException(NoSuchMethodException.class)
-                .addException(InvocationTargetException.class)
-                .addException(IllegalAccessException.class)
                 .addModifiers(nameAndMethodEntry.getValue().getModifiers());
         nameAndMethodEntry.getValue().getParameters().forEach(v -> methodSpec.addParameter(ParameterSpec.get(v)));
         TypeName returnType = TypeName.get(nameAndMethodEntry.getValue().getReturnType());
@@ -186,17 +181,21 @@ public class AnnotationProcessor extends AbstractProcessor {
 
         String callNextMethodName = CALL_NEXT_METHOD_PATTERN.formatted(nameAndMethodEntry.getKey());
         methodSpec.addCode(
-                CodeBlock.builder()
-                        .beginControlFlow("if (actualObject != null)")
-                        .addStatement("var actual = actualObject")
-                        .addStatement("actualObject = null")
-                        .addStatement("actual.getClass().getDeclaredMethod(\"%s\").invoke(actual)"
-                                .formatted(callNextMethodName))
-                        .nextControlFlow("else")
-                        .addStatement("currentNextMethod = 0")
-                        .addStatement(callNextMethodName + "()")
-                        .endControlFlow()
-                        .build()
+            CodeBlock.builder()
+                .beginControlFlow("if (actualObject != null)")
+                .addStatement("var actual = actualObject")
+                .addStatement("actualObject = null")
+                .beginControlFlow("try")
+                .addStatement("actual.getClass().getDeclaredMethod(\"%s\").invoke(actual)"
+                    .formatted(callNextMethodName))
+                .nextControlFlow("catch (Exception e)")
+                .addStatement("throw new RuntimeException(e)")
+                .endControlFlow()
+                .nextControlFlow("else")
+                .addStatement("currentNextMethod = 0")
+                .addStatement(callNextMethodName + "()")
+                .endControlFlow()
+                .build()
         );
 
 //        String methodCallFormat;

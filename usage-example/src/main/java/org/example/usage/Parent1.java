@@ -2,8 +2,8 @@ package org.example.usage;
 
 import ru.miqqra.multipleinheritance.MultipleInheritance;
 
-@MultipleInheritance
-//@MultipleInheritance(classes = {Parent2.class})
+//@MultipleInheritance
+@MultipleInheritance(classes = {Parent2.class})
 public class Parent1 extends Parent1Intermediary {
 
     public void whatever() {

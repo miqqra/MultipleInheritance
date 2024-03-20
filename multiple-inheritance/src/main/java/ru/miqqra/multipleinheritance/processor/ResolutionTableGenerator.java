@@ -7,24 +7,23 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.Types;
+import javax.tools.Diagnostic;
 import ru.miqqra.multipleinheritance.MultipleInheritance;
 
 
 public class ResolutionTableGenerator {
 
-    private final RoundEnvironment roundEnv;
-    private final Types typeUtils;
+    private final ProcessingEnvironment processingEnv;
 
-    public ResolutionTableGenerator(RoundEnvironment roundEnv,
-                                    Types typeUtils) {
-        this.roundEnv = roundEnv;
-        this.typeUtils = typeUtils;
+    public ResolutionTableGenerator(ProcessingEnvironment processingEnv) {
+        this.processingEnv = processingEnv;
     }
 
     public List<TypeElement> getTable(TypeElement inheritedClass) {
@@ -39,6 +38,10 @@ public class ResolutionTableGenerator {
                 for (TypeElement parent : getParents(current)) {
                     if (!visited.containsKey(parent)) {
                         stack.push(parent);
+                    } else if (visited.get(parent) == 1) {
+                        processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
+                            "Inheritance graph contains cycle");
+                        throw new RuntimeException("Inheritance graph contains cycle");
                     }
                 }
             } else {
@@ -68,6 +71,6 @@ public class ResolutionTableGenerator {
     }
 
     private Element mirrorToElement(TypeMirror x) {
-        return typeUtils.asElement(x);
+        return processingEnv.getTypeUtils().asElement(x);
     }
 }

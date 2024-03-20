@@ -2,6 +2,6 @@ package ru.miqqra.multipleinheritance;
 
 public class MultipleInheritanceObject {
 
-    protected MultipleInheritanceObject actualObject;
+    public MultipleInheritanceObject actualObject;
     protected int currentNextMethod = 0;
 }

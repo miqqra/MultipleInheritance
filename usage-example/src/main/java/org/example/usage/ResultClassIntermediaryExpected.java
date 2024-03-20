@@ -28,10 +28,10 @@ public class ResultClassIntermediaryExpected extends MultipleInheritanceObject {
     public void callNextother() {
         currentNextMethod++;
         if (currentNextMethod == 1) {
-            // parent2.actualObject = this;
+            parent2.actualObject = this;
             parent2.other();
         } else if (currentNextMethod == 2) {
-            // parent1.actualObject = this;
+            parent1.actualObject = this;
             parent1.other();
         }
     }

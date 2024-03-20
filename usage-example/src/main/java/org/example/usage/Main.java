@@ -7,7 +7,5 @@ public class Main {
         resultClass.whatever();
         System.out.println();
         resultClass.other();
-        System.out.println();
-        System.out.println("\n\n\nParent2 doesn't call super for method other");
     }
 }

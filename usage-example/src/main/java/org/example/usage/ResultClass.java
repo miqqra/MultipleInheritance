@@ -11,7 +11,7 @@ public class ResultClass extends ResultClassIntermediary {
     }
 
     public void other() {
-        System.out.println("Bye from ResultClass");
         super.other();
+        System.out.println("Bye from ResultClass");
     }
 }

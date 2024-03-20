@@ -65,8 +65,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         }
 
 //        ElementFilter.fieldsIn(List.of(parents.get(0)));
-        List<TypeElement> resolutionTable = ResolutionTableGenerator.getTable(inheritedClass, roundEnv);
-
+        List<TypeElement> resolutionTable = new ResolutionTableGenerator(roundEnv, processingEnv.getTypeUtils()).getTable(inheritedClass);
 
         TypeSpec.Builder implementationClass = TypeSpec.classBuilder(INTERMEDIARY_FIELD_PATTERN.formatted(inheritedClass.getSimpleName().toString())).addModifiers(inheritedClass.getModifiers().toArray(new Modifier[0])).superclass(MultipleInheritanceObject.class);
         implementationClass.addJavadoc("Parent classes: " + String.join(", ", parents.stream().map(TypeElement::toString).toList()));

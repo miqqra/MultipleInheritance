@@ -4,7 +4,7 @@ import ru.miqqra.multipleinheritance.MultipleInheritance;
 
 @MultipleInheritance
 //@MultipleInheritance(classes = {Parent1.class})
-public class B extends Parent2Intermediary {
+public class B extends BIntermediary {
 
     public void whatever() {
         System.out.println("Hello from B");

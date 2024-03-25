@@ -5,10 +5,10 @@ import ru.miqqra.multipleinheritance.MultipleInheritanceObject;
 /**
  * Parent classes: org.example.usage.Parent1, org.example.usage.Parent2
  */
-public class ResultClassIntermediaryExpected extends MultipleInheritanceObject {
-    private final Parent2 parent2 = new Parent2();
+public class ResultIntermediaryExpected extends MultipleInheritanceObject {
+    private final B parent2 = new B();
 
-    private final Parent1 parent1 = new Parent1();
+    private final A parent1 = new A();
 
     public void other() {
         if (actualObject != null) {

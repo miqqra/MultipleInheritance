@@ -6,6 +6,7 @@ import ru.miqqra.multipleinheritance.MultipleInheritance;
 @MultipleInheritance(classes = {D.class})
 public class E extends EIntermediary {
 
+//    public void whatever(int bbb) {
     public void whatever() {
         System.out.println("Hello from E");
         super.whatever();

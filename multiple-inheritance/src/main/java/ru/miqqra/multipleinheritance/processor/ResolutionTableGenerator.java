@@ -8,12 +8,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.processing.ProcessingEnvironment;
-import javax.annotation.processing.RoundEnvironment;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.MirroredTypesException;
 import javax.lang.model.type.TypeMirror;
-import javax.lang.model.util.Types;
 import javax.tools.Diagnostic;
 import ru.miqqra.multipleinheritance.MultipleInheritance;
 
@@ -21,12 +19,15 @@ import ru.miqqra.multipleinheritance.MultipleInheritance;
 public class ResolutionTableGenerator {
 
     private final ProcessingEnvironment processingEnv;
+    private final TypeElement inheritedClass;
 
-    public ResolutionTableGenerator(ProcessingEnvironment processingEnv) {
+    public ResolutionTableGenerator(ProcessingEnvironment processingEnv,
+                                    TypeElement inheritedClass) {
         this.processingEnv = processingEnv;
+        this.inheritedClass = inheritedClass;
     }
 
-    public List<TypeElement> getTable(TypeElement inheritedClass) {
+    public List<TypeElement> getTable() {
         List<TypeElement> table = new ArrayList<>();
         Map<TypeElement, Integer> visited = new HashMap<>();
         Deque<TypeElement> stack = new ArrayDeque<>();
@@ -35,7 +36,7 @@ public class ResolutionTableGenerator {
             TypeElement current = stack.peek();
             if (!visited.containsKey(current)) {
                 visited.put(current, 1);
-                for (TypeElement parent : getParents(current)) {
+                for (TypeElement parent : Util.getParents(current, processingEnv)) {
                     if (!visited.containsKey(parent)) {
                         stack.push(parent);
                     } else if (visited.get(parent) == 1) {
@@ -55,22 +56,5 @@ public class ResolutionTableGenerator {
         table.remove(table.size() - 1);
         Collections.reverse(table);
         return table;
-    }
-
-    private List<TypeElement> getParents(TypeElement inheritedClass) {
-        List<TypeElement> parents;
-        try {
-            //noinspection ResultOfMethodCallIgnored
-            inheritedClass.getAnnotation(MultipleInheritance.class).classes();
-            return List.of();
-        } catch (MirroredTypesException mte) {
-            return mte.getTypeMirrors().stream()
-                .map(x -> (TypeElement) mirrorToElement(x))
-                .toList();
-        }
-    }
-
-    private Element mirrorToElement(TypeMirror x) {
-        return processingEnv.getTypeUtils().asElement(x);
     }
 }

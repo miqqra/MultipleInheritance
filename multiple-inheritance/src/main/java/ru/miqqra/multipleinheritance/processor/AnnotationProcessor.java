@@ -28,8 +28,6 @@ import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.element.VariableElement;
-import javax.lang.model.type.MirroredTypesException;
-import javax.lang.model.type.TypeMirror;
 import javax.lang.model.util.ElementFilter;
 import ru.miqqra.multipleinheritance.MultipleInheritance;
 import ru.miqqra.multipleinheritance.MultipleInheritanceObject;
@@ -47,7 +45,8 @@ public class AnnotationProcessor extends AbstractProcessor {
         if (annotations.isEmpty()) {
             return false;
         }
-        Set<? extends Element> classes = roundEnv.getElementsAnnotatedWith(MultipleInheritance.class);
+        Set<? extends Element> classes =
+            roundEnv.getElementsAnnotatedWith(MultipleInheritance.class);
         for (var element : classes) {
             createImplementationFile((TypeElement) element);
         }
@@ -55,26 +54,32 @@ public class AnnotationProcessor extends AbstractProcessor {
     }
 
     private void createImplementationFile(TypeElement inheritedClass) {
-        List<TypeElement> parents;
-        try {
-            //noinspection ResultOfMethodCallIgnored
-            inheritedClass.getAnnotation(MultipleInheritance.class).classes();
-            return;
-        } catch (MirroredTypesException mte) {
-            parents = mte.getTypeMirrors().stream().map(x -> (TypeElement) mirrorToElement(x)).toList();
-        }
+        List<TypeElement> parents = Util.getParents(inheritedClass, processingEnv);
 
 //        ElementFilter.fieldsIn(List.of(parents.get(0)));
-        List<TypeElement> resolutionTable = new ResolutionTableGenerator(processingEnv).getTable(inheritedClass);
+        ResolutionTableGenerator generator =
+            new ResolutionTableGenerator(processingEnv, inheritedClass);
+        List<TypeElement> resolutionTable = generator.getTable();
 
-        TypeSpec.Builder implementationClass = TypeSpec.classBuilder(INTERMEDIARY_FIELD_PATTERN.formatted(inheritedClass.getSimpleName().toString())).addModifiers(inheritedClass.getModifiers().toArray(new Modifier[0])).superclass(MultipleInheritanceObject.class);
-        implementationClass.addJavadoc("Parent classes: " + String.join(", ", parents.stream().map(TypeElement::toString).toList()));
+        TypeSpec.Builder implementationClass = TypeSpec.classBuilder(
+                INTERMEDIARY_FIELD_PATTERN.formatted(inheritedClass.getSimpleName().toString()))
+            .addModifiers(inheritedClass.getModifiers().toArray(new Modifier[0]))
+            .superclass(MultipleInheritanceObject.class);
+        implementationClass.addJavadoc("Parent classes: " +
+            String.join(", ", parents.stream().map(TypeElement::toString).toList()));
 
         List<Parent> processedParents = new ArrayList<>();
         for (TypeElement parent : parents) {
             ClassMembers parentElements = membersFromClass(parent);
             processedParents.add(new Parent(parent, parentElements));
         }
+
+//        if (!inheritedClass.getSimpleName().toString().equals("ResultClass")) {
+//            return;
+//        }
+//        var q = new Method(ElementFilter.methodsIn(parents.get(0).getEnclosedElements()).get(0));
+//        var w = new Method(ElementFilter.methodsIn(parents.get(1).getEnclosedElements()).get(0));
+//        assert q.equals(w);
 
         for (int i = 0; i < resolutionTable.size(); i++) {
             TypeElement parent = resolutionTable.get(i);
@@ -85,14 +90,20 @@ public class AnnotationProcessor extends AbstractProcessor {
 //                        .methodBuilder(.getSimpleName().toString())
 //                        .addModifiers(method.getModifiers());
         }
-        Map<TypeElement, String> fieldNames = resolutionTable.stream().collect(Collectors.toMap(v -> v, this::getParamName, (v1, v2) -> v2));
+        Map<TypeElement, String> fieldNames = resolutionTable.stream()
+            .collect(Collectors.toMap(v -> v, this::getParamName, (v1, v2) -> v2));
 
-        Map<String, ExecutableElement> methods = processedParents.stream().map(Parent::classMembers).map(v -> v.methods).flatMap(Collection::stream).collect(Collectors.toMap(v -> v.getSimpleName().toString(), v -> v, (v1, v2) -> v2));
-        methods.putAll(ElementFilter.methodsIn(inheritedClass.getEnclosedElements()).stream().collect(Collectors.toMap(v -> v.getSimpleName().toString(), v -> v, (v1, v2) -> v2)));
+        Map<String, ExecutableElement> methods =
+            processedParents.stream().map(Parent::classMembers).map(v -> v.methods)
+                .flatMap(Collection::stream).collect(
+                    Collectors.toMap(v -> v.getSimpleName().toString(), v -> v, (v1, v2) -> v2));
+        methods.putAll(ElementFilter.methodsIn(inheritedClass.getEnclosedElements()).stream()
+            .collect(Collectors.toMap(v -> v.getSimpleName().toString(), v -> v, (v1, v2) -> v2)));
 
         methods.entrySet().forEach(nameAndMethodEntry -> {
             var methodSpec = createMethod(nameAndMethodEntry, resolutionTable, fieldNames);
-            var callNextMethodSpec = createCallNextMethod(nameAndMethodEntry, resolutionTable, fieldNames);
+            var callNextMethodSpec =
+                createCallNextMethod(nameAndMethodEntry, resolutionTable, fieldNames);
             implementationClass.addMethod(methodSpec);
             implementationClass.addMethod(callNextMethodSpec);
         });
@@ -168,13 +179,18 @@ public class AnnotationProcessor extends AbstractProcessor {
     }
 
     private FieldSpec createField(TypeElement parent) {
-        return FieldSpec.builder(ClassName.get(parent.asType()), getParamName(parent)).addModifiers(Modifier.PRIVATE, Modifier.FINAL).initializer("new " + parent.getSimpleName() + "()").build();
+        return FieldSpec.builder(ClassName.get(parent.asType()), getParamName(parent))
+            .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+            .initializer("new " + parent.getSimpleName() + "()").build();
     }
 
-    private MethodSpec createMethod(Map.Entry<String, ExecutableElement> nameAndMethodEntry, List<TypeElement> resolutionTable, Map<TypeElement, String> fieldNames) {
+    private MethodSpec createMethod(Map.Entry<String, ExecutableElement> nameAndMethodEntry,
+                                    List<TypeElement> resolutionTable,
+                                    Map<TypeElement, String> fieldNames) {
         MethodSpec.Builder methodSpec = MethodSpec.methodBuilder(nameAndMethodEntry.getKey())
-                .addModifiers(nameAndMethodEntry.getValue().getModifiers());
-        nameAndMethodEntry.getValue().getParameters().forEach(v -> methodSpec.addParameter(ParameterSpec.get(v)));
+            .addModifiers(nameAndMethodEntry.getValue().getModifiers());
+        nameAndMethodEntry.getValue().getParameters()
+            .forEach(v -> methodSpec.addParameter(ParameterSpec.get(v)));
         TypeName returnType = TypeName.get(nameAndMethodEntry.getValue().getReturnType());
         methodSpec.returns(returnType);
 
@@ -219,32 +235,37 @@ public class AnnotationProcessor extends AbstractProcessor {
         String callNextMethodName = CALL_NEXT_METHOD_PATTERN.formatted(nameAndMethodEntry.getKey());
 
         MethodSpec.Builder methodSpec = MethodSpec.methodBuilder(callNextMethodName)
-                .addModifiers(nameAndMethodEntry.getValue().getModifiers());
-        nameAndMethodEntry.getValue().getParameters().forEach(v -> methodSpec.addParameter(ParameterSpec.get(v)));
+            .addModifiers(nameAndMethodEntry.getValue().getModifiers());
+        nameAndMethodEntry.getValue().getParameters()
+            .forEach(v -> methodSpec.addParameter(ParameterSpec.get(v)));
 
         TypeName returnType = TypeName.get(nameAndMethodEntry.getValue().getReturnType());
         methodSpec.returns(returnType);
 
         CodeBlock.Builder codeBlockBuilder = CodeBlock.builder()
-                .addStatement("currentNextMethod++");
+            .addStatement("currentNextMethod++");
 
         for (int i = 0; i < resolutionTable.size(); i++) {
             if (i == 0 && i == resolutionTable.size() - 1) {
                 addStatements(
-                        codeBlockBuilder.beginControlFlow("if (currentNextMethod == %d)".formatted(i + 1)),
-                        nameAndMethodEntry, resolutionTable, fieldNames, i).endControlFlow();
+                    codeBlockBuilder.beginControlFlow(
+                        "if (currentNextMethod == %d)".formatted(i + 1)),
+                    nameAndMethodEntry, resolutionTable, fieldNames, i).endControlFlow();
             } else if (i == 0) {
                 addStatements(
-                        codeBlockBuilder.beginControlFlow("if (currentNextMethod == %d)".formatted(i + 1)),
-                        nameAndMethodEntry, resolutionTable, fieldNames, i);
+                    codeBlockBuilder.beginControlFlow(
+                        "if (currentNextMethod == %d)".formatted(i + 1)),
+                    nameAndMethodEntry, resolutionTable, fieldNames, i);
             } else if (i == resolutionTable.size() - 1) {
                 addStatements(
-                        codeBlockBuilder.nextControlFlow("if (currentNextMethod == %d)".formatted(i + 1)),
-                        nameAndMethodEntry, resolutionTable, fieldNames, i).endControlFlow();
+                    codeBlockBuilder.nextControlFlow(
+                        "if (currentNextMethod == %d)".formatted(i + 1)),
+                    nameAndMethodEntry, resolutionTable, fieldNames, i).endControlFlow();
             } else {
                 addStatements(
-                        codeBlockBuilder.nextControlFlow("if (currentNextMethod == %d)".formatted(i + 1)),
-                        nameAndMethodEntry, resolutionTable, fieldNames, i);
+                    codeBlockBuilder.nextControlFlow(
+                        "if (currentNextMethod == %d)".formatted(i + 1)),
+                    nameAndMethodEntry, resolutionTable, fieldNames, i);
             }
 
         }
@@ -265,12 +286,12 @@ public class AnnotationProcessor extends AbstractProcessor {
                 fieldNames.get(resolutionTable.get(i)),
                 nameAndMethodEntry.getKey(),
                 CodeBlock.join(nameAndMethodEntry.getValue()
-                                .getParameters()
-                                .stream()
-                                .map(x -> CodeBlock.of(x.getSimpleName().toString()))
-                                .toList(),
-                        ", ")
-        );
+                        .getParameters()
+                        .stream()
+                        .map(x -> CodeBlock.of(x.getSimpleName().toString()))
+                        .toList(),
+                    ", ")
+            );
     }
 
     private String getParamName(TypeElement typeElement) {
@@ -282,9 +303,6 @@ public class AnnotationProcessor extends AbstractProcessor {
         return Character.toLowerCase(className.charAt(0)) + className.substring(1);
     }
 
-    private Element mirrorToElement(TypeMirror x) {
-        return processingEnv.getTypeUtils().asElement(x);
-    }
 
     private static class ClassMembers {
         public Set<VariableElement> fields;

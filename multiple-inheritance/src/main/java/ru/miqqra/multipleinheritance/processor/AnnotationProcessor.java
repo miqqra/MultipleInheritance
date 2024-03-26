@@ -10,9 +10,6 @@ import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -24,11 +21,8 @@ import javax.annotation.processing.SupportedAnnotationTypes;
 import javax.annotation.processing.SupportedSourceVersion;
 import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
-import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import javax.lang.model.element.VariableElement;
-import javax.lang.model.util.ElementFilter;
 import ru.miqqra.multipleinheritance.MultipleInheritance;
 import ru.miqqra.multipleinheritance.MultipleInheritanceObject;
 
@@ -40,10 +34,15 @@ public class AnnotationProcessor extends AbstractProcessor {
     private static final String CALL_NEXT_METHOD_PATTERN = "callNext%s";
     private static final String INTERMEDIARY_FIELD_PATTERN = "%sIntermediary";
 
+    private AnnotatedClassParser classParser = null;
+
     @Override
     public boolean process(Set<? extends TypeElement> annotations, RoundEnvironment roundEnv) {
         if (annotations.isEmpty()) {
             return false;
+        }
+        if (classParser == null) {
+            classParser = new AnnotatedClassParser(processingEnv);
         }
         Set<? extends Element> classes =
             roundEnv.getElementsAnnotatedWith(MultipleInheritance.class);
@@ -53,33 +52,18 @@ public class AnnotationProcessor extends AbstractProcessor {
         return true;
     }
 
-    private void createImplementationFile(TypeElement inheritedClass) {
-        List<TypeElement> parents = Util.getParents(inheritedClass, processingEnv);
-
-//        ElementFilter.fieldsIn(List.of(parents.get(0)));
+    private void createImplementationFile(TypeElement annotatedElement) {
+        List<TypeElement> parents = classParser.get(annotatedElement).parents();
         ResolutionTableGenerator generator =
-            new ResolutionTableGenerator(processingEnv, inheritedClass);
+            new ResolutionTableGenerator(processingEnv, annotatedElement);
         List<TypeElement> resolutionTable = generator.getTable();
 
         TypeSpec.Builder implementationClass = TypeSpec.classBuilder(
-                INTERMEDIARY_FIELD_PATTERN.formatted(inheritedClass.getSimpleName().toString()))
-            .addModifiers(inheritedClass.getModifiers().toArray(new Modifier[0]))
+                INTERMEDIARY_FIELD_PATTERN.formatted(annotatedElement.getSimpleName().toString()))
+            .addModifiers(annotatedElement.getModifiers().toArray(new Modifier[0]))
             .superclass(MultipleInheritanceObject.class);
         implementationClass.addJavadoc("Parent classes: " +
             String.join(", ", parents.stream().map(TypeElement::toString).toList()));
-
-        List<Parent> processedParents = new ArrayList<>();
-        for (TypeElement parent : parents) {
-            ClassMembers parentElements = membersFromClass(parent);
-            processedParents.add(new Parent(parent, parentElements));
-        }
-
-//        if (!inheritedClass.getSimpleName().toString().equals("ResultClass")) {
-//            return;
-//        }
-//        var q = new Method(ElementFilter.methodsIn(parents.get(0).getEnclosedElements()).get(0));
-//        var w = new Method(ElementFilter.methodsIn(parents.get(1).getEnclosedElements()).get(0));
-//        assert q.equals(w);
 
         for (int i = 0; i < resolutionTable.size(); i++) {
             TypeElement parent = resolutionTable.get(i);
@@ -93,80 +77,18 @@ public class AnnotationProcessor extends AbstractProcessor {
         Map<TypeElement, String> fieldNames = resolutionTable.stream()
             .collect(Collectors.toMap(v -> v, this::getParamName, (v1, v2) -> v2));
 
-        Map<String, ExecutableElement> methods =
-            processedParents.stream().map(Parent::classMembers).map(v -> v.methods)
-                .flatMap(Collection::stream).collect(
-                    Collectors.toMap(v -> v.getSimpleName().toString(), v -> v, (v1, v2) -> v2));
-        methods.putAll(ElementFilter.methodsIn(inheritedClass.getEnclosedElements()).stream()
-            .collect(Collectors.toMap(v -> v.getSimpleName().toString(), v -> v, (v1, v2) -> v2)));
+        Set<Method> methods = classParser.get(annotatedElement).methods();
 
-        methods.entrySet().forEach(nameAndMethodEntry -> {
-            var methodSpec = createMethod(nameAndMethodEntry, resolutionTable, fieldNames);
+        methods.forEach(method -> {
+            var methodSpec = createMethod(method, resolutionTable, fieldNames);
             var callNextMethodSpec =
-                createCallNextMethod(nameAndMethodEntry, resolutionTable, fieldNames);
+                createCallNextMethod(method, resolutionTable, fieldNames);
             implementationClass.addMethod(methodSpec);
             implementationClass.addMethod(callNextMethodSpec);
         });
 
-
-//        for (int i = 0; i < processedParents.size(); i++) {
-//            Parent parent = processedParents.get(i);
-//            for (ExecutableElement method : parent.classMembers.methods) {
-//                if (true) {
-//                    var methodSpec = MethodSpec
-////                        .overriding(method)
-//                        .methodBuilder(method.getSimpleName().toString())
-//                        .addModifiers(method.getModifiers());
-//                    for (var parameter : method.getParameters()) {
-//                        methodSpec.addParameter(ParameterSpec.get(parameter));
-//                    }
-//                    TypeName returnType = TypeName.get(method.getReturnType());
-//                    methodSpec.returns(returnType);
-//                    String format;
-//                    if ("void".equals(returnType.toString())) {
-//                        format = "$N.$N($L)";
-//                    } else {
-//                        format = "return $N.$N($L)";
-//                    }
-//                    methodSpec.addStatement(format,
-//                        "__parent" + i,
-//                        method.getSimpleName().toString(),
-//                        CodeBlock.join(method.getParameters().stream()
-//                            .map(x -> CodeBlock.of(x.getSimpleName().toString())).toList(), ", ")
-//                    );
-//                    implementationClass.addMethod(methodSpec.build());
-//                }
-//            }
-//        }
-
-//        //todo
-//        Arrays.stream(inheritedClass.getClass().getMethods()).filter(v -> v.isAnnotationPresent(Inherit.class));
-//
-//        List<FieldSpec> fields1 = Arrays.stream(inheritedClass
-//                .getAnnotation(Inheritance.class)
-//                .classes())
-//            .map(v -> FieldSpec.builder((Type) v, v.getSimpleName())
-//                .addModifiers(Modifier.PRIVATE)
-//                .build())
-//            .toList();
-//
-//        fields.forEach(implementationClass::addField);
-
-//        for (Element methodElement : inheritedClass.getEnclosedElements()) {
-//            if (methodElement.getKind() == ElementKind.METHOD) {
-//                MethodSpec.Builder methodBuilder =
-//                    MethodSpec.overriding((ExecutableElement) methodElement)
-//                        .addModifiers(Modifier.PUBLIC)
-//                        .addCode(CodeBlock.of("System.out.println(\"hello\");"));
-//                // TODO: Add method body according to your requirements
-//                // You can use methodBuilder.addStatement("your code here");
-//
-//                implementationClass.addMethod(methodBuilder.build());
-//            }
-//        }
-
         TypeSpec implementation = implementationClass.build();
-        String qualifiedName = inheritedClass.getQualifiedName().toString();
+        String qualifiedName = annotatedElement.getQualifiedName().toString();
         String packageName = qualifiedName.substring(0, qualifiedName.lastIndexOf("."));
         JavaFile javaFile = JavaFile.builder(packageName, implementation).indent("    ").build();
 
@@ -184,17 +106,17 @@ public class AnnotationProcessor extends AbstractProcessor {
             .initializer("new " + parent.getSimpleName() + "()").build();
     }
 
-    private MethodSpec createMethod(Map.Entry<String, ExecutableElement> nameAndMethodEntry,
+    private MethodSpec createMethod(Method method,
                                     List<TypeElement> resolutionTable,
                                     Map<TypeElement, String> fieldNames) {
-        MethodSpec.Builder methodSpec = MethodSpec.methodBuilder(nameAndMethodEntry.getKey())
-            .addModifiers(nameAndMethodEntry.getValue().getModifiers());
-        nameAndMethodEntry.getValue().getParameters()
+        MethodSpec.Builder methodSpec = MethodSpec.methodBuilder(method.simpleName())
+            .addModifiers(method.element().getModifiers());
+        method.element().getParameters()
             .forEach(v -> methodSpec.addParameter(ParameterSpec.get(v)));
-        TypeName returnType = TypeName.get(nameAndMethodEntry.getValue().getReturnType());
+        TypeName returnType = TypeName.get(method.returnType());
         methodSpec.returns(returnType);
 
-        String callNextMethodName = CALL_NEXT_METHOD_PATTERN.formatted(nameAndMethodEntry.getKey());
+        String callNextMethodName = CALL_NEXT_METHOD_PATTERN.formatted(method.simpleName());
         methodSpec.addCode(
             CodeBlock.builder()
                 .beginControlFlow("if (actualObject != null)")
@@ -229,17 +151,18 @@ public class AnnotationProcessor extends AbstractProcessor {
         return methodSpec.build();
     }
 
-    private MethodSpec createCallNextMethod(Map.Entry<String, ExecutableElement> nameAndMethodEntry,
+    //    private MethodSpec createCallNextMethod(Map.Entry<String, ExecutableElement> nameAndMethodEntry,
+    private MethodSpec createCallNextMethod(Method method,
                                             List<TypeElement> resolutionTable,
                                             Map<TypeElement, String> fieldNames) {
-        String callNextMethodName = CALL_NEXT_METHOD_PATTERN.formatted(nameAndMethodEntry.getKey());
+        String callNextMethodName = CALL_NEXT_METHOD_PATTERN.formatted(method.simpleName());
 
         MethodSpec.Builder methodSpec = MethodSpec.methodBuilder(callNextMethodName)
-            .addModifiers(nameAndMethodEntry.getValue().getModifiers());
-        nameAndMethodEntry.getValue().getParameters()
+            .addModifiers(method.element().getModifiers());
+        method.element().getParameters()
             .forEach(v -> methodSpec.addParameter(ParameterSpec.get(v)));
 
-        TypeName returnType = TypeName.get(nameAndMethodEntry.getValue().getReturnType());
+        TypeName returnType = TypeName.get(method.returnType());
         methodSpec.returns(returnType);
 
         CodeBlock.Builder codeBlockBuilder = CodeBlock.builder()
@@ -250,22 +173,22 @@ public class AnnotationProcessor extends AbstractProcessor {
                 addStatements(
                     codeBlockBuilder.beginControlFlow(
                         "if (currentNextMethod == %d)".formatted(i + 1)),
-                    nameAndMethodEntry, resolutionTable, fieldNames, i).endControlFlow();
+                    method, resolutionTable, fieldNames, i).endControlFlow();
             } else if (i == 0) {
                 addStatements(
                     codeBlockBuilder.beginControlFlow(
                         "if (currentNextMethod == %d)".formatted(i + 1)),
-                    nameAndMethodEntry, resolutionTable, fieldNames, i);
+                    method, resolutionTable, fieldNames, i);
             } else if (i == resolutionTable.size() - 1) {
                 addStatements(
                     codeBlockBuilder.nextControlFlow(
                         "if (currentNextMethod == %d)".formatted(i + 1)),
-                    nameAndMethodEntry, resolutionTable, fieldNames, i).endControlFlow();
+                    method, resolutionTable, fieldNames, i).endControlFlow();
             } else {
                 addStatements(
                     codeBlockBuilder.nextControlFlow(
                         "if (currentNextMethod == %d)".formatted(i + 1)),
-                    nameAndMethodEntry, resolutionTable, fieldNames, i);
+                    method, resolutionTable, fieldNames, i);
             }
 
         }
@@ -273,7 +196,7 @@ public class AnnotationProcessor extends AbstractProcessor {
     }
 
     private CodeBlock.Builder addStatements(CodeBlock.Builder builder,
-                                            Map.Entry<String, ExecutableElement> nameAndMethodEntry,
+                                            Method method,
                                             List<TypeElement> resolutionTable,
                                             Map<TypeElement, String> fieldNames,
                                             int i) {
@@ -284,8 +207,8 @@ public class AnnotationProcessor extends AbstractProcessor {
             .addStatement("$N.actualObject = this", fieldNames.get(resolutionTable.get(i)))
             .addStatement(methodCallFormat,
                 fieldNames.get(resolutionTable.get(i)),
-                nameAndMethodEntry.getKey(),
-                CodeBlock.join(nameAndMethodEntry.getValue()
+                method.simpleName(),
+                CodeBlock.join(method.element()
                         .getParameters()
                         .stream()
                         .map(x -> CodeBlock.of(x.getSimpleName().toString()))
@@ -304,28 +227,4 @@ public class AnnotationProcessor extends AbstractProcessor {
     }
 
 
-    private static class ClassMembers {
-        public Set<VariableElement> fields;
-        public Set<ExecutableElement> methods;
-    }
-
-
-    /**
-     * Get elements that were declared in the class or its parents until some parent met.
-     */
-    private ClassMembers membersFromClass(TypeElement from) {
-        ClassMembers ce = new ClassMembers();
-        ce.fields = new HashSet<>(ElementFilter.fieldsIn(from.getEnclosedElements()));
-        ce.methods = new HashSet<>(ElementFilter.methodsIn(from.getEnclosedElements()));
-//        TypeElement superclass = (TypeElement) mirrorToElement(from.getSuperclass());
-//        if (superclass != base && superclass != null) {
-//            ClassMembers ce1 = membersFromClass(superclass, base);
-//            ce.fields.addAll(ce1.fields);
-//            ce.methods.addAll(ce1.methods);
-//        }
-        return ce;
-    }
-
-    private record Parent(TypeElement element, ClassMembers classMembers) {
-    }
 }

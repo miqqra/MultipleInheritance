@@ -7,6 +7,7 @@ import javax.lang.model.element.TypeElement;
 
 public record AnnotatedClass(
     List<TypeElement> parents,
+    List<TypeElement> resolutionTable,
     List<ExecutableElement> declaredMethodsList, // if you need Element or their order
     Set<Method> declaredMethods,
     Set<Method> methods) {

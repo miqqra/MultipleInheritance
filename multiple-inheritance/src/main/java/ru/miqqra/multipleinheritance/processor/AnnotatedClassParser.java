@@ -39,6 +39,8 @@ public class AnnotatedClassParser {
         for (TypeElement parent : parents) {
             methods.addAll(get(parent).methods());
         }
-        return new AnnotatedClass(parents, declaredMethodsList, declaredMethods, methods);
+        var generator = new ResolutionTableGenerator(processingEnv, annotatedElement);
+        return new AnnotatedClass(parents, generator.getTable(), declaredMethodsList,
+            declaredMethods, methods);
     }
 }

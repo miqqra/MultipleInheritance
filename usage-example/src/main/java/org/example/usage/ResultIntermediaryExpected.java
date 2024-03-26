@@ -20,11 +20,11 @@ class ResultIntermediaryExpected extends MultipleInheritanceObject { // Maybe re
 
     // Underscore for our service fields
     // Double underscore to avoid collisions from user-defined names
-    private final C __c;
-    private final A __a;
-    private final E __e;
-    private final D __d;
     private final B __b;
+    private final D __d;
+    private final E __e;
+    private final A __a;
+    private final C __c;
 
     ResultIntermediaryExpected() {
         // Reverse order of resolution table

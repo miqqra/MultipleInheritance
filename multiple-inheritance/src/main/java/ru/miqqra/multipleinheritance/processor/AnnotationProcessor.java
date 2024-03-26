@@ -54,9 +54,7 @@ public class AnnotationProcessor extends AbstractProcessor {
 
     private void createImplementationFile(TypeElement annotatedElement) {
         List<TypeElement> parents = classParser.get(annotatedElement).parents();
-        ResolutionTableGenerator generator =
-            new ResolutionTableGenerator(processingEnv, annotatedElement);
-        List<TypeElement> resolutionTable = generator.getTable();
+        List<TypeElement> resolutionTable = classParser.get(annotatedElement).resolutionTable();
 
         TypeSpec.Builder implementationClass = TypeSpec.classBuilder(
                 INTERMEDIARY_FIELD_PATTERN.formatted(annotatedElement.getSimpleName().toString()))
@@ -168,26 +166,26 @@ public class AnnotationProcessor extends AbstractProcessor {
         CodeBlock.Builder codeBlockBuilder = CodeBlock.builder()
             .addStatement("currentNextMethod++");
 
-        for (int i = 0; i < resolutionTable.size(); i++) {
+        for (int i = resolutionTable.size() - 1; i >= 0; i--) {
             if (i == 0 && i == resolutionTable.size() - 1) {
                 addStatements(
                     codeBlockBuilder.beginControlFlow(
-                        "if (currentNextMethod == %d)".formatted(i + 1)),
+                        "if (currentNextMethod == %d)".formatted(resolutionTable.size() - i)),
                     method, resolutionTable, fieldNames, i).endControlFlow();
-            } else if (i == 0) {
-                addStatements(
-                    codeBlockBuilder.beginControlFlow(
-                        "if (currentNextMethod == %d)".formatted(i + 1)),
-                    method, resolutionTable, fieldNames, i);
             } else if (i == resolutionTable.size() - 1) {
                 addStatements(
+                    codeBlockBuilder.beginControlFlow(
+                        "if (currentNextMethod == %d)".formatted(resolutionTable.size() - i)),
+                    method, resolutionTable, fieldNames, i);
+            } else if (i == 0) {
+                addStatements(
                     codeBlockBuilder.nextControlFlow(
-                        "if (currentNextMethod == %d)".formatted(i + 1)),
+                        "if (currentNextMethod == %d)".formatted(resolutionTable.size() - i)),
                     method, resolutionTable, fieldNames, i).endControlFlow();
             } else {
                 addStatements(
                     codeBlockBuilder.nextControlFlow(
-                        "if (currentNextMethod == %d)".formatted(i + 1)),
+                        "if (currentNextMethod == %d)".formatted(resolutionTable.size() - i)),
                     method, resolutionTable, fieldNames, i);
             }
 

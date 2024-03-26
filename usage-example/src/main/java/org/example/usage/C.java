@@ -5,8 +5,10 @@ import ru.miqqra.multipleinheritance.MultipleInheritance;
 //@MultipleInheritance
 @MultipleInheritance(classes = {A.class, B.class})
 public class C extends CIntermediary {
+    public C() {
+        System.out.println("C created");
+    }
 
-//    public void whatever(int aaa) {
     public void whatever() {
         System.out.println("Hello from C");
         super.whatever();

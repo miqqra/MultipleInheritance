@@ -3,46 +3,85 @@ package org.example.usage;
 import ru.miqqra.multipleinheritance.MultipleInheritanceObject;
 
 /**
- * Parent classes: org.example.usage.Parent1, org.example.usage.Parent2
+ * Example hierarchy:
+ * A     B
+ * ├────┘│
+ * │     D
+ * C     │
+ * │     E
+ * └─┬───┘
+ * Result
  */
-public class ResultIntermediaryExpected extends MultipleInheritanceObject {
-    private final B parent2 = new B();
+class ResultIntermediaryExpected extends MultipleInheritanceObject { // Maybe remove extends?
+    // These three fields should be defined in generated code, currently in MultipleInheritanceObject
+    public static Object[] _initParents = null;
+    public Object _actualObject;
+    private int _currentNextMethod = 0;
 
-    private final A parent1 = new A();
+    // Underscore for our service fields
+    // Double underscore to avoid collisions from user-defined names
+    private final C __c;
+    private final A __a;
+    private final E __e;
+    private final D __d;
+    private final B __b;
+
+    ResultIntermediaryExpected() {
+        // Reverse order of resolution table
+        if (_initParents == null) {
+            B.initParents = new Object[] {};
+            __b = new B();
+            D.initParents = new Object[] {__b};
+            __d = new D();
+            E.initParents = new Object[] {__b, __d};
+            __e = new E();
+            A.initParents = new Object[] {};
+            __a = new A();
+            C.initParents = new Object[] {__b, __a};
+            __c = new C();
+        } else {
+            __b = (B) _initParents[0];
+            __d = (D) _initParents[1];
+            __e = (E) _initParents[2];
+            __a = (A) _initParents[3];
+            __c = (C) _initParents[4];
+            _initParents = null;
+        }
+    }
 
     public void other() {
-        if (actualObject != null) {
-            var actual = actualObject;
-            actualObject = null;
+        if (_actualObject != null) {
+            var actual = _actualObject;
+            _actualObject = null;
             try {
-                actual.getClass().getMethod("callNextOther").invoke(actual);
+                actual.getClass().getMethod("_callNextOther").invoke(actual);
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
         } else {
-            currentNextMethod = 0;
-            callNextother();
+            _currentNextMethod = 0;
+            _callNextother();
         }
     }
 
-    public void callNextother() {
-        currentNextMethod++;
-        if (currentNextMethod == 1) {
-            parent2.actualObject = this;
-            parent2.other();
-        } else if (currentNextMethod == 2) {
-            parent1.actualObject = this;
-            parent1.other();
+    private void _callNextother() {
+        _currentNextMethod++;
+        _currentNextMethod++;
+        if (_currentNextMethod == 1) {
+            __c.actualObject = this;
+            __c.other();
+        } else if (_currentNextMethod == 2) {
+            __a.actualObject = this;
+            __a.other();
+        } else if (_currentNextMethod == 3) {
+            __e.actualObject = this;
+            __e.other();
+        } else if (_currentNextMethod == 4) {
+            __d.actualObject = this;
+            __d.other();
+        } else if (_currentNextMethod == 5) {
+            __b.actualObject = this;
+            __b.other();
         }
     }
-
-//    public void whatever() {
-//        parent2.whatever();
-//        parent1.whatever();
-//        parent2.callNextwhatever();
-//        parent1.callNextwhatever();
-//    }
-//
-//    public void callNextwhatever() {
-//    }
 }

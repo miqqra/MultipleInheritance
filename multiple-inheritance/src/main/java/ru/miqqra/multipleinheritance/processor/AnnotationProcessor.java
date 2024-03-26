@@ -102,7 +102,7 @@ public class AnnotationProcessor extends AbstractProcessor {
 
     private FieldSpec createField(TypeElement parent) {
         return FieldSpec.builder(ClassName.get(parent.asType()), getParamName(parent))
-            .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+            .addModifiers()
             .initializer("new " + parent.getSimpleName() + "()").build();
     }
 

@@ -9,10 +9,10 @@ public class C extends CIntermediary {
         System.out.println("C created");
     }
 
-    public void whatever() {
-        System.out.println("Hello from C");
-        super.whatever();
-    }
+//    public void whatever(int a) {
+//        System.out.println("C says" + a);
+//        super.whatever(a + 1);
+//    }
 
     public void other() {
         super.other();

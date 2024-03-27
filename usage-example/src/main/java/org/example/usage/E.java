@@ -9,9 +9,9 @@ public class E extends EIntermediary {
         System.out.println("E created");
     }
 
-    public void whatever() {
-        System.out.println("Hello from E");
-        super.whatever();
+    public void whatever(int a) {
+        System.out.println("E says " + a);
+        super.whatever(a + 1);
     }
 
     public void other() {

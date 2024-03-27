@@ -8,9 +8,9 @@ public class D extends DIntermediary {
         System.out.println("D created");
     }
 
-    public void whatever() {
-        System.out.println("Hello from D");
-        super.whatever();
+    public void whatever(int a) {
+        System.out.println("D says " + a);
+        super.whatever(a + 1);
     }
 
 //    public void other() {

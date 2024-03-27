@@ -5,9 +5,9 @@ import ru.miqqra.multipleinheritance.MultipleInheritance;
 @MultipleInheritance(classes = {C.class, E.class})
 public class ResultClass extends ResultClassIntermediary {
 
-    public void whatever() {
-        System.out.println("Hello from ResultClass");
-        super.whatever();
+    public void whatever(int number) {
+        System.out.println("ResultClass says" + number);
+        super.whatever(number + 1);
     }
 
     public void other() {

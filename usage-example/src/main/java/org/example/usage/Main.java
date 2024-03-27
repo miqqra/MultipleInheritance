@@ -7,7 +7,7 @@ public class Main {
 //        ResultClass resultClass = new ResultClass();
         Z resultClass = new Z();
         System.out.println();
-        resultClass.whatever();
+        resultClass.whatever(0);
         System.out.println();
         resultClass.other();
     }

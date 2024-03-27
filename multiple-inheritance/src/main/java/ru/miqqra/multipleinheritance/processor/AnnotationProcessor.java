@@ -49,7 +49,7 @@ public class AnnotationProcessor extends AbstractProcessor {
             classParser = new AnnotatedClassParser(processingEnv);
         }
         Set<? extends Element> classes =
-                roundEnv.getElementsAnnotatedWith(MultipleInheritance.class);
+            roundEnv.getElementsAnnotatedWith(MultipleInheritance.class);
         for (var element : classes) {
             createImplementationFile((TypeElement) element);
         }
@@ -61,11 +61,11 @@ public class AnnotationProcessor extends AbstractProcessor {
         List<TypeElement> resolutionTable = classParser.get(annotatedElement).resolutionTable();
 
         TypeSpec.Builder implementationClass = TypeSpec.classBuilder(
-                        INTERMEDIARY_FIELD_PATTERN.formatted(annotatedElement.getSimpleName().toString()))
-                .addModifiers(annotatedElement.getModifiers().toArray(new Modifier[0]))
-                .superclass(MultipleInheritanceObject.class);
+                INTERMEDIARY_FIELD_PATTERN.formatted(annotatedElement.getSimpleName().toString()))
+            .addModifiers(annotatedElement.getModifiers().toArray(new Modifier[0]))
+            .superclass(MultipleInheritanceObject.class);
         implementationClass.addJavadoc("Parent classes: " +
-                String.join(", ", parents.stream().map(TypeElement::toString).toList()));
+            String.join(", ", parents.stream().map(TypeElement::toString).toList()));
 
         createDefaultFields().forEach(implementationClass::addField);
 
@@ -79,7 +79,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         }
 
         Map<TypeElement, String> fieldNames = resolutionTable.stream()
-                .collect(Collectors.toMap(v -> v, this::getParamName, (v1, v2) -> v2));
+            .collect(Collectors.toMap(v -> v, this::getParamName, (v1, v2) -> v2));
 
         implementationClass.addMethod(createConstructor(resolutionTable, fieldNames));
 
@@ -88,7 +88,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         methods.forEach(method -> {
             var methodSpec = createMethod(method, resolutionTable, fieldNames);
             var callNextMethodSpec =
-                    createCallNextMethod(method, resolutionTable, fieldNames);
+                createCallNextMethod(method, resolutionTable, fieldNames);
             implementationClass.addMethod(methodSpec);
             implementationClass.addMethod(callNextMethodSpec);
         });
@@ -112,36 +112,36 @@ public class AnnotationProcessor extends AbstractProcessor {
 
         //todo add params ?
         var codeBlockBuilder = CodeBlock.builder()
-                .beginControlFlow("if (%s == null)".formatted(INIT_PARENTS_VARIABLE_NAME));
+            .beginControlFlow("if (%s == null)".formatted(INIT_PARENTS_VARIABLE_NAME));
 
         for (TypeElement parent : resolutionTable) {
             codeBlockBuilder
-                    .addStatement("%s.%s = new Object[] {%s}"
-                            .formatted(
-                                    parent.getSimpleName(),
-                                    INIT_PARENTS_VARIABLE_NAME,
-                                    classParser.get(parent)
-                                            .resolutionTable()
-                                            .stream()
-                                            .map(fieldNames::get)
-                                            .collect(Collectors.joining(", "))
-                            ))
-                    .addStatement("%s = new %s()"
-                            .formatted(
-                                    fieldNames.get(parent),
-                                    parent.getSimpleName()
-                            ));
+                .addStatement("%s.%s = new Object[] {%s}"
+                    .formatted(
+                        parent.getSimpleName(),
+                        INIT_PARENTS_VARIABLE_NAME,
+                        classParser.get(parent)
+                            .resolutionTable()
+                            .stream()
+                            .map(fieldNames::get)
+                            .collect(Collectors.joining(", "))
+                    ))
+                .addStatement("%s = new %s()"
+                    .formatted(
+                        fieldNames.get(parent),
+                        parent.getSimpleName()
+                    ));
         }
 
         codeBlockBuilder.nextControlFlow("else");
 
         for (int i = 0; i < resolutionTable.size(); i++) {
             codeBlockBuilder.addStatement("%s = (%s) %s[%d]"
-                    .formatted(
-                            fieldNames.get(resolutionTable.get(i)),
-                            resolutionTable.get(i).getSimpleName(),
-                            INIT_PARENTS_VARIABLE_NAME,
-                            i));
+                .formatted(
+                    fieldNames.get(resolutionTable.get(i)),
+                    resolutionTable.get(i).getSimpleName(),
+                    INIT_PARENTS_VARIABLE_NAME,
+                    i));
         }
 
         codeBlockBuilder.addStatement("%s = null".formatted(INIT_PARENTS_VARIABLE_NAME));
@@ -152,66 +152,60 @@ public class AnnotationProcessor extends AbstractProcessor {
 
     private List<FieldSpec> createDefaultFields() {
         return List.of(
-                FieldSpec.builder(Object[].class, INIT_PARENTS_VARIABLE_NAME)
-                        .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
-                        .initializer("null").build(),
-                FieldSpec.builder(TypeName.OBJECT, ACTUAL_OBJECT_VARIABLE_NAME)
-                        .addModifiers(Modifier.PUBLIC)
-                        .build(),
-                FieldSpec.builder(TypeName.INT, CURRENT_NEXT_METHOD_VARIABLE_NAME)
-                        .addModifiers(Modifier.PRIVATE)
-                        .initializer("0").build()
+            FieldSpec.builder(Object[].class, INIT_PARENTS_VARIABLE_NAME)
+                .addModifiers(Modifier.PUBLIC, Modifier.STATIC)
+                .initializer("null").build(),
+            FieldSpec.builder(TypeName.OBJECT, ACTUAL_OBJECT_VARIABLE_NAME)
+                .addModifiers(Modifier.PUBLIC)
+                .build(),
+            FieldSpec.builder(TypeName.INT, CURRENT_NEXT_METHOD_VARIABLE_NAME)
+                .addModifiers(Modifier.PRIVATE)
+                .initializer("0").build()
         );
     }
 
     private FieldSpec createField(TypeElement parent) {
         return FieldSpec.builder(ClassName.get(parent.asType()), getParamName(parent))
-                .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
-                .build();
+            .addModifiers(Modifier.PRIVATE, Modifier.FINAL)
+            .build();
     }
 
     private MethodSpec createMethod(Method method,
                                     List<TypeElement> resolutionTable,
                                     Map<TypeElement, String> fieldNames) {
+        String callNextCallFormat = "$N($L)";
         MethodSpec.Builder methodSpec = MethodSpec.methodBuilder(method.simpleName())
-                .addModifiers(method.element().getModifiers());
+            .addModifiers(method.element().getModifiers());
         method.element().getParameters()
-                .forEach(v -> methodSpec.addParameter(ParameterSpec.get(v)));
+            .forEach(v -> methodSpec.addParameter(ParameterSpec.get(v)));
         TypeName returnType = TypeName.get(method.returnType());
         methodSpec.returns(returnType);
 
         String callNextMethodName = CALL_NEXT_METHOD_PATTERN.formatted(method.simpleName());
+        CodeBlock parameters = codeBlockParameters(method);
         methodSpec.addCode(
-                CodeBlock.builder()
-                        .beginControlFlow("if (%s != null)".formatted(ACTUAL_OBJECT_VARIABLE_NAME))
-                        .addStatement("var actual = %s".formatted(ACTUAL_OBJECT_VARIABLE_NAME))
-                        .addStatement("%s = null".formatted(ACTUAL_OBJECT_VARIABLE_NAME))
-                        .beginControlFlow("try")
-                        .addStatement("actual.getClass().getMethod(\"%s\").invoke(actual)"
-                                .formatted(callNextMethodName))
-                        .nextControlFlow("catch (Exception e)")
-                        .addStatement("throw new RuntimeException(e)")
-                        .endControlFlow()
-                        .nextControlFlow("else")
-                        .addStatement("%s = 0".formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME))
-                        .addStatement(callNextMethodName + "()")
-                        .endControlFlow()
-                        .build()
+            CodeBlock.builder()
+                .beginControlFlow("if (%s != null)".formatted(ACTUAL_OBJECT_VARIABLE_NAME))
+                .addStatement("var actual = %s".formatted(ACTUAL_OBJECT_VARIABLE_NAME))
+                .addStatement("%s = null".formatted(ACTUAL_OBJECT_VARIABLE_NAME))
+                .beginControlFlow("try")
+                .addStatement(
+                    (parameters.isEmpty() // todo: here getMethod
+                        ? "actual.getClass().getMethod(\"$N\").invoke(actual$L)"
+                        : "actual.getClass().getMethod(\"$N\").invoke(actual, $L)"),
+                    callNextMethodName,
+                    parameters)
+                .nextControlFlow("catch (Exception e)")
+                .addStatement("throw new RuntimeException(e)")
+                .endControlFlow()
+                .nextControlFlow("else")
+                .addStatement("%s = 0".formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME))
+                .addStatement(callNextCallFormat,
+                    callNextMethodName,
+                    parameters)
+                .endControlFlow()
+                .build()
         );
-
-//        String methodCallFormat;
-//        if ("void".equals(returnType.toString())) {
-//            methodCallFormat = "$N.$N($L)";
-//        } else {
-//            methodCallFormat = "$N.$N($L)"; //todo
-//        }
-//
-//        resolutionTable.forEach(element -> methodSpec.addStatement(methodCallFormat, fieldNames.get(element), nameAndMethodEntry.getKey(), CodeBlock.join(nameAndMethodEntry.getValue().getParameters().stream().map(x -> CodeBlock.of(x.getSimpleName().toString())).toList(), ", ")));
-//
-//        String callNextMethodFormat = "$N.$N($L)";
-//        resolutionTable.forEach(element -> methodSpec.addStatement(callNextMethodFormat, fieldNames.get(element), CALL_NEXT_METHOD_PATTERN.formatted(nameAndMethodEntry.getKey()), CodeBlock.join(nameAndMethodEntry.getValue().getParameters().stream().map(x -> CodeBlock.of(x.getSimpleName().toString())).toList(), ", ")));
-
-
         return methodSpec.build();
     }
 
@@ -222,37 +216,37 @@ public class AnnotationProcessor extends AbstractProcessor {
         String callNextMethodName = CALL_NEXT_METHOD_PATTERN.formatted(method.simpleName());
 
         MethodSpec.Builder methodSpec = MethodSpec.methodBuilder(callNextMethodName)
-                .addModifiers(method.element().getModifiers());
+            .addModifiers(method.element().getModifiers());
         method.element().getParameters()
-                .forEach(v -> methodSpec.addParameter(ParameterSpec.get(v)));
+            .forEach(v -> methodSpec.addParameter(ParameterSpec.get(v)));
 
         TypeName returnType = TypeName.get(method.returnType());
         methodSpec.returns(returnType);
 
         CodeBlock.Builder codeBlockBuilder = CodeBlock.builder()
-                .addStatement("%s++".formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME));
+            .addStatement("%s++".formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME));
 
         for (int i = resolutionTable.size() - 1; i >= 0; i--) {
             if (i == 0 && i == resolutionTable.size() - 1) {
                 addStatements(
-                        codeBlockBuilder.beginControlFlow("if (%s == %d)"
-                                .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
-                        method, resolutionTable, fieldNames, i).endControlFlow();
+                    codeBlockBuilder.beginControlFlow("if (%s == %d)"
+                        .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
+                    method, resolutionTable, fieldNames, i).endControlFlow();
             } else if (i == resolutionTable.size() - 1) {
                 addStatements(
-                        codeBlockBuilder.beginControlFlow("if (%s == %d)"
-                                .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
-                        method, resolutionTable, fieldNames, i);
+                    codeBlockBuilder.beginControlFlow("if (%s == %d)"
+                        .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
+                    method, resolutionTable, fieldNames, i);
             } else if (i == 0) {
                 addStatements(
-                        codeBlockBuilder.nextControlFlow("else if (%s == %d)"
-                                .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
-                        method, resolutionTable, fieldNames, i).endControlFlow();
+                    codeBlockBuilder.nextControlFlow("else if (%s == %d)"
+                        .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
+                    method, resolutionTable, fieldNames, i).endControlFlow();
             } else {
                 addStatements(
-                        codeBlockBuilder.nextControlFlow("else if (%s == %d)"
-                                .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
-                        method, resolutionTable, fieldNames, i);
+                    codeBlockBuilder.nextControlFlow("else if (%s == %d)"
+                        .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
+                    method, resolutionTable, fieldNames, i);
             }
 
         }
@@ -268,17 +262,26 @@ public class AnnotationProcessor extends AbstractProcessor {
 
         return builder
 
-                .addStatement("$N.%s = this".formatted(ACTUAL_OBJECT_VARIABLE_NAME), fieldNames.get(resolutionTable.get(i)))
-                .addStatement(methodCallFormat,
-                        fieldNames.get(resolutionTable.get(i)),
-                        method.simpleName(),
-                        CodeBlock.join(method.element()
-                                        .getParameters()
-                                        .stream()
-                                        .map(x -> CodeBlock.of(x.getSimpleName().toString()))
-                                        .toList(),
-                                ", ")
-                );
+            .addStatement("$N.%s = this".formatted(ACTUAL_OBJECT_VARIABLE_NAME),
+                fieldNames.get(resolutionTable.get(i)))
+            .addStatement(methodCallFormat,
+                fieldNames.get(resolutionTable.get(i)),
+                method.simpleName(),
+                codeBlockParameters(method)
+            );
+    }
+
+    private static CodeBlock codeBlockParameters(Method method) {
+        return CodeBlock.join(method.element()
+                .getParameters()
+                .stream()
+                .map(x -> CodeBlock.of(x.getSimpleName().toString()))
+                .toList(),
+            ", ");
+    }
+
+    private static CodeBlock codeBlockParameterTypes() {
+
     }
 
     private String getParamName(TypeElement typeElement) {

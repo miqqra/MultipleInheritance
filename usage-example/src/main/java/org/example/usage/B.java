@@ -9,9 +9,9 @@ public class B extends BIntermediary {
         System.out.println("B created");
     }
 
-    public void whatever() {
-        System.out.println("Hello from B");
-        super.whatever();
+    public void whatever(int a) {
+        System.out.println("B (root) says " + a);
+        super.whatever(a + 10);
     }
 
     public void other() {

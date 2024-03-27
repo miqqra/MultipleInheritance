@@ -9,9 +9,11 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import ru.miqqra.multipleinheritance.MultipleInheritance;
-import ru.miqqra.multipleinheritance.MultipleInheritanceObject;
-
+import java.io.IOException;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
@@ -21,11 +23,8 @@ import javax.lang.model.SourceVersion;
 import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import ru.miqqra.multipleinheritance.MultipleInheritance;
+import ru.miqqra.multipleinheritance.MultipleInheritanceObject;
 
 @SupportedAnnotationTypes("ru.miqqra.multipleinheritance.MultipleInheritance")
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
@@ -246,12 +245,12 @@ public class AnnotationProcessor extends AbstractProcessor {
                         method, resolutionTable, fieldNames, i);
             } else if (i == 0) {
                 addStatements(
-                        codeBlockBuilder.nextControlFlow("if (%s == %d)"
+                        codeBlockBuilder.nextControlFlow("else if (%s == %d)"
                                 .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
                         method, resolutionTable, fieldNames, i).endControlFlow();
             } else {
                 addStatements(
-                        codeBlockBuilder.nextControlFlow("if (%s == %d)"
+                        codeBlockBuilder.nextControlFlow("else if (%s == %d)"
                                 .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
                         method, resolutionTable, fieldNames, i);
             }

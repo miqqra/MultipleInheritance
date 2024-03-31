@@ -30,15 +30,15 @@ class ResultIntermediaryExpected extends MultipleInheritanceObject { // Maybe re
     ResultIntermediaryExpected() {
         // Reverse order of resolution table
         if (_initParents == null) {
-            B._initParents = new Object[] {};
+            B._initParents = new Object[]{};
             __b = new B();
-            D._initParents = new Object[] {__b};
+            D._initParents = new Object[]{__b};
             __d = new D();
-            E._initParents = new Object[] {__b, __d};
+            E._initParents = new Object[]{__b, __d};
             __e = new E();
-            A._initParents = new Object[] {};
+            A._initParents = new Object[]{};
             __a = new A();
-            C._initParents = new Object[] {__b, __a};
+            C._initParents = new Object[]{__b, __a};
             __c = new C();
         } else {
             __b = (B) _initParents[0];
@@ -84,5 +84,41 @@ class ResultIntermediaryExpected extends MultipleInheritanceObject { // Maybe re
             __b._actualObject = this;
             __b.other();
         }
+    }
+
+    public int whatever(int number) {
+        if (_actualObject != null) {
+            var actual = _actualObject;
+            _actualObject = null;
+            try {
+                return (int) actual.getClass().getMethod("callNextwhatever", int.class).invoke(actual, number);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            _currentNextMethod = 0;
+            return callNextwhatever(number);
+        }
+    }
+
+    public int callNextwhatever(int number) {
+        _currentNextMethod++;
+        if (_currentNextMethod == 1) {
+            __c._actualObject = this;
+            return __c.whatever(number);
+        } else if (_currentNextMethod == 2) {
+            __a._actualObject = this;
+            return __a.whatever(number);
+        } else if (_currentNextMethod == 3) {
+            __e._actualObject = this;
+            return __e.whatever(number);
+        } else if (_currentNextMethod == 4) {
+            __d._actualObject = this;
+            return __d.whatever(number);
+        } else if (_currentNextMethod == 5) {
+            __b._actualObject = this;
+            return __b.whatever(number);
+        }
+        return 0;
     }
 }

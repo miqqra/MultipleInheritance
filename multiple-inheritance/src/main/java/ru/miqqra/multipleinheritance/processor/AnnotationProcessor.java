@@ -9,9 +9,12 @@ import com.squareup.javapoet.MethodSpec;
 import com.squareup.javapoet.ParameterSpec;
 import com.squareup.javapoet.TypeName;
 import com.squareup.javapoet.TypeSpec;
-import ru.miqqra.multipleinheritance.MultipleInheritance;
-import ru.miqqra.multipleinheritance.MultipleInheritanceObject;
-
+import java.io.IOException;
+import java.lang.reflect.Array;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 import javax.annotation.processing.AbstractProcessor;
 import javax.annotation.processing.Processor;
 import javax.annotation.processing.RoundEnvironment;
@@ -22,11 +25,8 @@ import javax.lang.model.element.Element;
 import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
-import java.io.IOException;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.stream.Collectors;
+import ru.miqqra.multipleinheritance.MultipleInheritance;
+import ru.miqqra.multipleinheritance.MultipleInheritanceObject;
 
 @SupportedAnnotationTypes("ru.miqqra.multipleinheritance.MultipleInheritance")
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
@@ -88,7 +88,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         Set<Method> methods = classParser.get(annotatedElement).methods();
 
         methods.forEach(method -> {
-            var methodSpec = createMethod(method, resolutionTable, fieldNames);
+            var methodSpec = createMethod(method);
             var callNextMethodSpec =
                     createCallNextMethod(method, resolutionTable, fieldNames);
             implementationClass.addMethod(methodSpec);
@@ -172,10 +172,8 @@ public class AnnotationProcessor extends AbstractProcessor {
                 .build();
     }
 
-    private MethodSpec createMethod(Method method,
-                                    List<TypeElement> resolutionTable,
-                                    Map<TypeElement, String> fieldNames) {
-        String callNextCallFormat = "$N($L)";
+    private MethodSpec createMethod(Method method) {
+
         MethodSpec.Builder methodSpec = MethodSpec.methodBuilder(method.simpleName())
                 .addModifiers(method.element().getModifiers());
         method.element().getParameters()
@@ -186,6 +184,7 @@ public class AnnotationProcessor extends AbstractProcessor {
         String callNextMethodName = CALL_NEXT_METHOD_PATTERN.formatted(method.simpleName());
         CodeBlock parameters = codeBlockParameters(method);
         CodeBlock parametersTypes = codeBlockParameterTypes(method);
+
         // todo: here getMethod
         methodSpec.addCode(
                 CodeBlock.builder()
@@ -193,19 +192,16 @@ public class AnnotationProcessor extends AbstractProcessor {
                         .addStatement("var actual = %s".formatted(ACTUAL_OBJECT_VARIABLE_NAME))
                         .addStatement("%s = null".formatted(ACTUAL_OBJECT_VARIABLE_NAME))
                         .beginControlFlow("try")
-                        .addStatement(
-                                "actual.getClass().getMethod(\"$N\"$L$L).invoke(actual$L$L)",
-                                callNextMethodName,
-                                (parameters.isEmpty() ? "" : ", "),
-                                parametersTypes,
-                                (parameters.isEmpty() ? "" : ", "),
-                                parameters)
+                        .addStatement(returnType.equals(TypeName.VOID)
+                                ? createMethodGetPositiveResultVoid(parameters, parametersTypes, callNextMethodName)
+                                : createMethodGetPositiveResultWithReturn(parameters, parametersTypes, callNextMethodName, method))
                         .nextControlFlow("catch (Exception e)")
                         .addStatement("throw new RuntimeException(e)")
                         .endControlFlow()
                         .nextControlFlow("else")
                         .addStatement("%s = 0".formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME))
-                        .addStatement(callNextCallFormat,
+                        .addStatement(
+                                returnType.equals(TypeName.VOID) ? "$N($L)" : "return $N($L)",
                                 callNextMethodName,
                                 parameters)
                         .endControlFlow()
@@ -213,6 +209,35 @@ public class AnnotationProcessor extends AbstractProcessor {
         );
         return methodSpec.build();
     }
+
+    private CodeBlock createMethodGetPositiveResultVoid(CodeBlock parameters,
+                                                        CodeBlock parametersTypes,
+                                                        String callNextMethodName) {
+        String invokeReflectionVoid = "actual.getClass().getMethod(\"$N\"$L$L).invoke(actual$L$L)";
+
+        return CodeBlock.of(invokeReflectionVoid,
+                callNextMethodName,
+                (parameters.isEmpty() ? "" : ", "),
+                parametersTypes,
+                (parameters.isEmpty() ? "" : ", "),
+                parameters);
+    }
+
+    private CodeBlock createMethodGetPositiveResultWithReturn(CodeBlock parameters,
+                                                              CodeBlock parametersTypes,
+                                                              String callNextMethodName,
+                                                              Method method) {
+        String invokeReflectionWithReturn = "return ($L) actual.getClass().getMethod(\"$N\"$L$L).invoke(actual$L$L)";
+
+        return CodeBlock.of(invokeReflectionWithReturn,
+                method.returnType().toString(),
+                callNextMethodName,
+                (parameters.isEmpty() ? "" : ", "),
+                parametersTypes,
+                (parameters.isEmpty() ? "" : ", "),
+                parameters);
+    }
+
 
     //    private MethodSpec createCallNextMethod(Map.Entry<String, ExecutableElement> nameAndMethodEntry,
     private MethodSpec createCallNextMethod(Method method,
@@ -236,40 +261,47 @@ public class AnnotationProcessor extends AbstractProcessor {
                 addStatements(
                         codeBlockBuilder.beginControlFlow("if (%s == %d)"
                                 .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
-                        method, resolutionTable, fieldNames, i).endControlFlow();
+                        method, returnType, resolutionTable, fieldNames, i)
+                        .endControlFlow();
             } else if (i == resolutionTable.size() - 1) {
                 addStatements(
                         codeBlockBuilder.beginControlFlow("if (%s == %d)"
                                 .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
-                        method, resolutionTable, fieldNames, i);
+                        method, returnType, resolutionTable, fieldNames, i);
             } else if (i == 0) {
                 addStatements(
                         codeBlockBuilder.nextControlFlow("else if (%s == %d)"
                                 .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
-                        method, resolutionTable, fieldNames, i).endControlFlow();
+                        method, returnType, resolutionTable, fieldNames, i).endControlFlow();
             } else {
                 addStatements(
                         codeBlockBuilder.nextControlFlow("else if (%s == %d)"
                                 .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
-                        method, resolutionTable, fieldNames, i);
+                        method, returnType, resolutionTable, fieldNames, i);
             }
 
+        }
+
+        if (!returnType.equals(TypeName.VOID)) {
+            codeBlockBuilder.addStatement("return $L",
+                    returnType.isPrimitive()
+                            ? PrimitiveTypesUtil.PRIMITIVE_TYPES_DEFAULTS.get(returnType)
+                            : Array.get(Array.newInstance(method.returnType().getClass(), 1), 0));
         }
         return methodSpec.addCode(codeBlockBuilder.build()).build();
     }
 
     private CodeBlock.Builder addStatements(CodeBlock.Builder builder,
                                             Method method,
+                                            TypeName returnType,
                                             List<TypeElement> resolutionTable,
                                             Map<TypeElement, String> fieldNames,
                                             int i) {
-        String methodCallFormat = "$N.$N($L)";
-
         return builder
-
                 .addStatement("$N.%s = this".formatted(ACTUAL_OBJECT_VARIABLE_NAME),
                         fieldNames.get(resolutionTable.get(i)))
-                .addStatement(methodCallFormat,
+                .addStatement(
+                        returnType.equals(TypeName.VOID) ? "$N.$N($L)" : "return $N.$N($L)",
                         fieldNames.get(resolutionTable.get(i)),
                         method.simpleName(),
                         codeBlockParameters(method)

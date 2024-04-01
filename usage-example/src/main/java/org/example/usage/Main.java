@@ -9,5 +9,7 @@ public class Main {
         resultClass.other();
         System.out.println();
         System.out.println(resultClass.everyClass());
+        System.out.println();
+        resultClass.onlyA();
     }
 }

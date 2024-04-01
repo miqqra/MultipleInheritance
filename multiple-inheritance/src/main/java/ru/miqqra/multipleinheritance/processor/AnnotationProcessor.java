@@ -62,14 +62,6 @@ public class AnnotationProcessor extends AbstractProcessor {
         List<TypeElement> parents = classParser.get(annotatedElement).parents();
         List<TypeElement> resolutionTable = classParser.get(annotatedElement).resolutionTable();
 
-        var a = classParser.get(annotatedElement).methods().stream().filter(x -> x.simpleName().equals("everyClass")).toList();
-        if (a.size() == 2) {
-            var q = a.get(0);
-            var w = a.get(1);
-            var res = q.equals(w);
-            res = false;
-        }
-
         TypeSpec.Builder implementationClass = TypeSpec.classBuilder(
                         INTERMEDIARY_FIELD_PATTERN.formatted(annotatedElement.getSimpleName().toString()))
                 .addModifiers(annotatedElement.getModifiers().toArray(new Modifier[0]))
@@ -264,30 +256,33 @@ public class AnnotationProcessor extends AbstractProcessor {
         CodeBlock.Builder codeBlockBuilder = CodeBlock.builder()
                 .addStatement("%s++".formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME));
 
-        for (int i = resolutionTable.size() - 1; i >= 0; i--) {
-            if (i == 0 && i == resolutionTable.size() - 1) {
+        List<TypeElement> methodTable = resolutionTable.stream()
+            .filter(x -> classParser.get(x).methods().contains(method))
+            .toList();
+
+        for (int i = methodTable.size() - 1; i >= 0; i--) {
+            if (i == 0 && i == methodTable.size() - 1) {
                 addStatements(
                         codeBlockBuilder.beginControlFlow("if (%s == %d)"
-                                .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
-                        method, returnType, resolutionTable, fieldNames, i)
+                                .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, methodTable.size() - i)),
+                        method, returnType, methodTable, fieldNames, i)
                         .endControlFlow();
-            } else if (i == resolutionTable.size() - 1) {
+            } else if (i == methodTable.size() - 1) {
                 addStatements(
                         codeBlockBuilder.beginControlFlow("if (%s == %d)"
-                                .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
-                        method, returnType, resolutionTable, fieldNames, i);
+                                .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, methodTable.size() - i)),
+                        method, returnType, methodTable, fieldNames, i);
             } else if (i == 0) {
                 addStatements(
                         codeBlockBuilder.nextControlFlow("else if (%s == %d)"
-                                .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
-                        method, returnType, resolutionTable, fieldNames, i).endControlFlow();
+                                .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, methodTable.size() - i)),
+                        method, returnType, methodTable, fieldNames, i).endControlFlow();
             } else {
                 addStatements(
                         codeBlockBuilder.nextControlFlow("else if (%s == %d)"
-                                .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, resolutionTable.size() - i)),
-                        method, returnType, resolutionTable, fieldNames, i);
+                                .formatted(CURRENT_NEXT_METHOD_VARIABLE_NAME, methodTable.size() - i)),
+                        method, returnType, methodTable, fieldNames, i);
             }
-
         }
 
         if (!returnType.equals(TypeName.VOID)) {
@@ -340,10 +335,5 @@ public class AnnotationProcessor extends AbstractProcessor {
         String className = typeElement.getSimpleName().toString();
         return "__" + Character.toLowerCase(className.charAt(0)) + className.substring(1);
     }
-
-    private String getParamName(String className) {
-        return Character.toLowerCase(className.charAt(0)) + className.substring(1);
-    }
-
 
 }

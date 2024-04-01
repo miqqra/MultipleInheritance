@@ -33,4 +33,9 @@ public class A extends AIntermediary {
         fromParent.add("A");
         return fromParent;
     }
+
+    public void onlyA() {
+        System.out.println("OnlyA called on A");
+        super.onlyA();
+    }
 }

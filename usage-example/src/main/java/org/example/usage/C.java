@@ -25,6 +25,11 @@ public class C extends CIntermediary {
         return fromParent;
     }
 
+    public void onlyA() {
+        System.out.println("OnlyA called on C");
+        super.onlyA();
+    }
+
 //    public void whatever(int n, Set<String> ss) {
 //        System.out.printf("Hello %d from Parent1", n);
 ////        super

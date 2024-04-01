@@ -17,6 +17,8 @@ public class AnnotatedClassParser {
 
     public AnnotatedClassParser(ProcessingEnvironment processingEnv) {
         this.processingEnv = processingEnv;
+        Method.processingEnv = processingEnv;
+        Parameter.processingEnv = processingEnv;
     }
 
     public AnnotatedClass get(TypeElement annotatedElement) {

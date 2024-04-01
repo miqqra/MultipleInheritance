@@ -1,9 +1,9 @@
 package org.example.usage;
 
+import java.util.Set;
 import ru.miqqra.multipleinheritance.MultipleInheritance;
 
 @MultipleInheritance
-//@MultipleInheritance(classes = {Parent2.class})
 public class A extends AIntermediary {
     public A() {
         System.out.println("A created");
@@ -19,9 +19,9 @@ public class A extends AIntermediary {
         System.out.println("Bye from A");
     }
 
-//    public void whatever(int n, Set<String> ss) {
-//        System.out.printf("Hello %d from Parent1", n);
-////        super
-
-//    }
+    public Set<String> everyClass() {
+        Set<String> fromParent = super.everyClass();
+        fromParent.add("A");
+        return fromParent;
+    }
 }

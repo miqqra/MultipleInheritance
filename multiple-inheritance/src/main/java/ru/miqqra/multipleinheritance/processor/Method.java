@@ -2,14 +2,18 @@ package ru.miqqra.multipleinheritance.processor;
 
 import java.util.List;
 import java.util.Objects;
+import javax.annotation.processing.ProcessingEnvironment;
 import javax.lang.model.element.ExecutableElement;
 import javax.lang.model.type.TypeMirror;
+import javax.lang.model.util.Types;
 
 public record Method(
     String simpleName,
     TypeMirror returnType,
     List<Parameter> parameters,
     ExecutableElement element) {
+    public static ProcessingEnvironment processingEnv;
+
     public Method(ExecutableElement executableElement) {
         this(executableElement.getSimpleName().toString(),
             executableElement.getReturnType(),
@@ -27,12 +31,12 @@ public record Method(
         }
         Method method = (Method) o;
         return Objects.equals(simpleName, method.simpleName) &&
-            Objects.equals(returnType, method.returnType) &&
+            processingEnv.getTypeUtils().isSameType(returnType, method.returnType) &&
             Objects.equals(parameters, method.parameters);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(simpleName, returnType, parameters);
+        return Objects.hash(simpleName, returnType.toString(), parameters);
     }
 }

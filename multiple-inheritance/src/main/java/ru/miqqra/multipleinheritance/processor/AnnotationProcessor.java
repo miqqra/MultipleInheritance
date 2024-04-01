@@ -62,6 +62,14 @@ public class AnnotationProcessor extends AbstractProcessor {
         List<TypeElement> parents = classParser.get(annotatedElement).parents();
         List<TypeElement> resolutionTable = classParser.get(annotatedElement).resolutionTable();
 
+        var a = classParser.get(annotatedElement).methods().stream().filter(x -> x.simpleName().equals("everyClass")).toList();
+        if (a.size() == 2) {
+            var q = a.get(0);
+            var w = a.get(1);
+            var res = q.equals(w);
+            res = false;
+        }
+
         TypeSpec.Builder implementationClass = TypeSpec.classBuilder(
                         INTERMEDIARY_FIELD_PATTERN.formatted(annotatedElement.getSimpleName().toString()))
                 .addModifiers(annotatedElement.getModifiers().toArray(new Modifier[0]))

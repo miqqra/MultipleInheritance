@@ -1,10 +1,10 @@
 package org.example.usage;
 
+import java.util.HashSet;
 import java.util.Set;
 import ru.miqqra.multipleinheritance.MultipleInheritance;
 
 @MultipleInheritance
-//@MultipleInheritance(classes = {Parent1.class})
 public class B extends BIntermediary {
     public B() {
         System.out.println("B created");
@@ -12,7 +12,12 @@ public class B extends BIntermediary {
 
     public int whatever(int a) {
         System.out.println("B (root) says " + a);
-        return super.whatever(a + 10);
+        int fromParents = super.whatever(a + 10);
+        if (fromParents == 0) {
+            return 10;
+        } else {
+            return fromParents;
+        }
     }
 
     public void other() {
@@ -22,6 +27,9 @@ public class B extends BIntermediary {
 
     public Set<String> everyClass() {
         Set<String> fromParent = super.everyClass();
+        if (fromParent == null) {
+            fromParent = new HashSet<>();
+        }
         fromParent.add("B");
         return fromParent;
     }

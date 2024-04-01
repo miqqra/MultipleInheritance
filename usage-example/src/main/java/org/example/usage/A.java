@@ -1,5 +1,6 @@
 package org.example.usage;
 
+import java.util.HashSet;
 import java.util.Set;
 import ru.miqqra.multipleinheritance.MultipleInheritance;
 
@@ -11,7 +12,12 @@ public class A extends AIntermediary {
 
     public int whatever(int number) {
         System.out.println("A (root) says " + number);
-        return super.whatever(number + 10);
+        int fromParents = super.whatever(number + 10);
+        if (fromParents == 0) {
+            return 10;
+        } else {
+            return fromParents;
+        }
     }
 
     public void other() {
@@ -21,6 +27,9 @@ public class A extends AIntermediary {
 
     public Set<String> everyClass() {
         Set<String> fromParent = super.everyClass();
+        if (fromParent == null) {
+            fromParent = new HashSet<>();
+        }
         fromParent.add("A");
         return fromParent;
     }

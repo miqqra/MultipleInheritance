@@ -3,7 +3,6 @@ package org.example.usage;
 import java.util.Set;
 import ru.miqqra.multipleinheritance.MultipleInheritance;
 
-//@MultipleInheritance
 @MultipleInheritance(classes = {D.class})
 public class E extends EIntermediary {
     public E() {

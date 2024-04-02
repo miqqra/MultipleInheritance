@@ -26,7 +26,6 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 import ru.miqqra.multipleinheritance.MultipleInheritance;
-import ru.miqqra.multipleinheritance.MultipleInheritanceObject;
 
 @SupportedAnnotationTypes("ru.miqqra.multipleinheritance.MultipleInheritance")
 @SupportedSourceVersion(SourceVersion.RELEASE_17)
@@ -64,8 +63,7 @@ public class AnnotationProcessor extends AbstractProcessor {
 
         TypeSpec.Builder implementationClass = TypeSpec.classBuilder(
                         INTERMEDIARY_FIELD_PATTERN.formatted(annotatedElement.getSimpleName().toString()))
-                .addModifiers(annotatedElement.getModifiers().toArray(new Modifier[0]))
-                .superclass(MultipleInheritanceObject.class);
+                .addModifiers(annotatedElement.getModifiers().toArray(new Modifier[0]));
         implementationClass.addJavadoc("Parent classes: " +
                 String.join(", ", parents.stream().map(TypeElement::toString).toList()));
 

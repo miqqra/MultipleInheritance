@@ -30,7 +30,6 @@ public class Util {
             processingEnv.getMessager().printMessage(Diagnostic.Kind.ERROR,
                 charSequence);
             throw new RuntimeException(charSequence);
-//            return List.of();
         }
     }
 }

@@ -11,5 +11,7 @@ public class Main {
         System.out.println(resultClass.everyClass());
         System.out.println();
         resultClass.onlyA();
+        System.out.println();
+        ((BInterface) resultClass).bMethod();
     }
 }

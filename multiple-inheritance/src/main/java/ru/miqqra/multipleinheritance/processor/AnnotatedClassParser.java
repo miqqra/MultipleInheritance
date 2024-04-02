@@ -19,6 +19,7 @@ public class AnnotatedClassParser {
         this.processingEnv = processingEnv;
         Method.processingEnv = processingEnv;
         Parameter.processingEnv = processingEnv;
+        Type.processingEnv = processingEnv;
     }
 
     public AnnotatedClass get(TypeElement annotatedElement) {
@@ -38,11 +39,14 @@ public class AnnotatedClassParser {
         Set<Method> declaredMethods =
             declaredMethodsList.stream().map(Method::new).collect(Collectors.toSet());
         Set<Method> methods = new HashSet<>(declaredMethods);
+        Set<Type> interfaces =
+            new HashSet<>(annotatedElement.getInterfaces().stream().map(Type::new).toList());
         for (TypeElement parent : parents) {
             methods.addAll(get(parent).methods());
+            interfaces.addAll(get(parent).interfaces());
         }
         var generator = new ResolutionTableGenerator(processingEnv, annotatedElement);
         return new AnnotatedClass(parents, generator.getTable(), declaredMethodsList,
-            declaredMethods, methods);
+            declaredMethods, methods, interfaces);
     }
 }

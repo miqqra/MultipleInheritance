@@ -10,5 +10,6 @@ public record AnnotatedClass(
     List<TypeElement> resolutionTable,
     List<ExecutableElement> declaredMethodsList, // if you need Element or their order
     Set<Method> declaredMethods,
-    Set<Method> methods) {
+    Set<Method> methods,
+    Set<Type> interfaces) {
 }

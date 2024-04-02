@@ -4,7 +4,7 @@ import java.util.Set;
 import ru.miqqra.multipleinheritance.MultipleInheritance;
 
 @MultipleInheritance(classes = {A.class, B.class})
-public class C extends CIntermediary {
+public class C extends CIntermediary implements BInterface {
     public C() {
         System.out.println("C created");
     }
@@ -30,9 +30,9 @@ public class C extends CIntermediary {
         super.onlyA();
     }
 
-//    public void whatever(int n, Set<String> ss) {
-//        System.out.printf("Hello %d from Parent1", n);
-////        super
-
-//    }
+    @Override
+    public void bMethod() {
+        super.bMethod();
+        System.out.println("C is also B");
+    }
 }

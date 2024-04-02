@@ -5,7 +5,7 @@ import java.util.Set;
 import ru.miqqra.multipleinheritance.MultipleInheritance;
 
 @MultipleInheritance
-public class B extends BIntermediary {
+public class B extends BIntermediary implements BInterface {
     public B() {
         System.out.println("B created");
     }
@@ -34,7 +34,9 @@ public class B extends BIntermediary {
         return fromParent;
     }
 
-//    int onlyParent2() {
-//        return 2;
-//    }
+    @Override
+    public void bMethod() {
+        super.bMethod();
+        System.out.println("B method called");
+    }
 }

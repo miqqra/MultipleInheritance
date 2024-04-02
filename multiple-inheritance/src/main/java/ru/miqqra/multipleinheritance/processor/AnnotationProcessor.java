@@ -64,6 +64,9 @@ public class AnnotationProcessor extends AbstractProcessor {
         TypeSpec.Builder implementationClass = TypeSpec.classBuilder(
                         INTERMEDIARY_FIELD_PATTERN.formatted(annotatedElement.getSimpleName().toString()))
                 .addModifiers(annotatedElement.getModifiers().toArray(new Modifier[0]));
+        for (var i: classParser.get(annotatedElement).interfaces()) {
+            implementationClass.addSuperinterface(i.mirror());
+        }
         implementationClass.addJavadoc("Parent classes: " +
                 String.join(", ", parents.stream().map(TypeElement::toString).toList()));
 

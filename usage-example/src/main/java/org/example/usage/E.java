@@ -25,9 +25,4 @@ public class E extends EIntermediary {
         return fromParent;
     }
 
-//    public void whatever(int n, Set<String> ss) {
-//        System.out.printf("Hello %d from Parent1", n);
-////        super
-
-//    }
 }

@@ -14,11 +14,6 @@ public class D extends DIntermediary {
         return super.whatever(a + 1);
     }
 
-//    public void other() {
-//        super.other();
-//        System.out.println("Bye from D");
-//    }
-
     public Set<String> everyClass() {
         Set<String> fromParent = super.everyClass();
         fromParent.add("D");

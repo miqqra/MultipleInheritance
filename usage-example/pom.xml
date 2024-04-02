@@ -7,7 +7,7 @@
     <parent>
         <groupId>ru.miqqra</groupId>
         <artifactId>mi-parent</artifactId>
-        <version>1.0.20-SNAPSHOT</version>
+        <version>1.0.0</version>
     </parent>
 
     <artifactId>usage-example</artifactId>
@@ -30,7 +30,7 @@
         <dependency>
             <groupId>ru.miqqra</groupId>
             <artifactId>multiple-inheritance</artifactId>
-            <version>1.0.20-SNAPSHOT</version>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
 

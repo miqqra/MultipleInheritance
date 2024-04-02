@@ -6,7 +6,7 @@
 
     <groupId>ru.miqqra</groupId>
     <artifactId>mi-parent</artifactId>
-    <version>1.0.20-SNAPSHOT</version>
+    <version>1.0.0</version>
     <packaging>pom</packaging>
     <modules>
         <module>multiple-inheritance</module>

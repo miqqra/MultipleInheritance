@@ -41,7 +41,27 @@ public class B {
 ```
 Вы хотите написать класс С, который будет наследоваться от этих двух классов
 
-Тогда:
+Для этого над классами нужно указать аннотацию ``@MultipleInheritance()`` для родителей и потомка
+
+```java
+@MultipleInheritance
+public class A {
+
+    public void whatever() {
+        System.out.println("It's A");
+    }
+}
+```
+
+```java
+@MultipleInheritance
+public class B {
+
+    public void whatever() {
+        System.out.println("It's B");
+    }
+}
+```
 
 ```java
 @MultipleInheritance(classes = {A.class, B.class})
@@ -66,6 +86,7 @@ public class С {
 Для каждого класса пропишите наследование от соответствующего ему **"класса-прослойки"** и **вызов метода** ``super()``
 
 ```java
+@MultipleInheritance
 public class A extends AIntermediary {
 
     public void whatever() {
@@ -76,6 +97,7 @@ public class A extends AIntermediary {
 ```
 
 ```java
+@MultipleInheritance
 public class B extends BIntermediary {
 
     public void whatever() {

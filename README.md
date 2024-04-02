@@ -122,6 +122,18 @@ public class С extends CIntermediary {
 
 - Java 17
 
+## Сборка проекта
+
+Отклонируйте репозиторий multiple-inheritance:
+```git
+git clone https://github.com/miqqra/MultipleInheritance.git
+```
+
+В склонированном проекте запустите
+```maven
+mvn package
+```
+
 ## Maven
 
 Пример ``pom.xml`` с зависимостью ``multiple-inheritance``
@@ -146,6 +158,9 @@ public class С extends CIntermediary {
         <groupId>ru.miqqra</groupId>
         <artifactId>multiple-inheritance</artifactId>
         <version>${multiple-inheritance.version}</version>
+        <systemPath>
+            ${basedir}/../MultipleInheritance/multiple-inheritance/target/multiple-inheritance-1.0.0.jar
+        </systemPath>
     </dependency>
     
     ...
@@ -164,7 +179,7 @@ public class С extends CIntermediary {
 dependencies {
 
     implementation 'com.squareup:javapoet:1.13.0'
-    implementation 'ru.miqqra:multiple-inheritance:1.0.0'
+    implementation files('/../MultipleInheritance/multiple-inheritance/target/multiple-inheritance-1.0.0.jar')
     
     ...
 }

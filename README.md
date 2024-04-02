@@ -130,12 +130,18 @@ public class С extends CIntermediary {
 ...
 
 <properties>
-    <multiple-inheritance.version>1.0.20-SNAPSHOT</multiple-inheritance.version>
+    <multiple-inheritance.version>1.0.0</multiple-inheritance.version>
 </properties>
 
 ...
 
 <dependencies>
+
+    <dependency>
+        <groupId>com.squareup</groupId>
+        <artifactId>javapoet</artifactId>
+        <version>1.13.0</version>
+    </dependency>
     <dependency>
         <groupId>ru.miqqra</groupId>
         <artifactId>multiple-inheritance</artifactId>
@@ -157,7 +163,8 @@ public class С extends CIntermediary {
 
 dependencies {
 
-    implementation 'ru.miqqra:multiple-inheritance:1.0.20-SNAPSHOT'
+    implementation 'com.squareup:javapoet:1.13.0'
+    implementation 'ru.miqqra:multiple-inheritance:1.0.0'
     
     ...
 }

@@ -112,7 +112,6 @@ public class AnnotationProcessor extends AbstractProcessor {
                                          Map<TypeElement, String> fieldNames) {
         var constructorBuilder = MethodSpec.constructorBuilder();
 
-        //todo add params ?
         var codeBlockBuilder = CodeBlock.builder()
                 .beginControlFlow("if (%s == null)".formatted(INIT_PARENTS_VARIABLE_NAME));
 
@@ -185,7 +184,6 @@ public class AnnotationProcessor extends AbstractProcessor {
         CodeBlock parameters = codeBlockParameters(method);
         CodeBlock parametersTypes = codeBlockParameterTypes(method);
 
-        // todo: here getMethod
         methodSpec.addCode(
                 CodeBlock.builder()
                         .beginControlFlow("if (%s != null)".formatted(ACTUAL_OBJECT_VARIABLE_NAME))
